@@ -1,0 +1,9 @@
+#! /bin/bash
+
+touch server.bin
+rm server.bin
+gcc -w -o server.bin server.c
+
+touch client.bin
+rm client.bin
+gcc -w -o client.bin client.c
