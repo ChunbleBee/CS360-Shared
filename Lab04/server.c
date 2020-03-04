@@ -170,6 +170,7 @@ void lsFile(char * fileStr) {
 
         sprintf(line, "%c%c %d %d %d %d %s %s\n", type, perm, stats->st_nlink,
             stats->st_gid, stats->st_uid, stats->st_size, filetime, fileStr);
+        write(client_socket, line, LINEMAX);
 
         free(stats);
     } else {
