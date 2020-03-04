@@ -3,6 +3,7 @@
 #include <string.h>
 #include <netdb.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 #define LINEMAX 256
 
@@ -65,7 +66,7 @@ int main (int argc, char * argv[], char * env[]) {
             n = write(server_socket, line, LINEMAX);
             printf("client: wrote n=%d bytes:\n    %s\n", n, line);
             n = read(server_socket, line, LINEMAX);
-            printf("client: read n=%d bytes:\n    %s\n");
+            printf("client: read n=%d bytes:\n    %s\n", n, line);
         }
     }
 }

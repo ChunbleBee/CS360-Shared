@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netdb.h>
+#include <unistd.h>
 
 #define LINEMAX 256
 
@@ -16,13 +17,14 @@ int server_socket, client_socket, server_port;
 void server_init(char * name) {
     printf("Initializing server\n");
     host_entry = gethostbyname(name);
-    if (host_entry == 0) {
+    if (host_entry == NULL) {
         printf("unknown host\n");
         exit(1);
     }
     printf("Server host info:\n");
-    printf("    hostname=%s  ", host_entry->h_name);
-    printf("IP=%s\n", inet_ntoa(*((struct in_addr *) host_entry->h_addr_list[0])));
+    printf("    hostname=%s  \n", name);
+    printf("IP=%s\n", inet_ntoa(*(long *)host_entry->h_addr_list[0]));
+    // printf("IP=%s\n", inet_ntoa(*((struct in_addr *) host_entry->h_addr_list[0])));
     printf("Creating socket\n");
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket < 0) {
@@ -30,8 +32,8 @@ void server_init(char * name) {
         exit(2);
     }
     server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    server_addr.sin_port = 0;
+    server_addr.sin_addr.s_addr = *(long *)host_entry->h_addr_list[0];
+    server_addr.sin_port = 0; // kernal will assign port number
     printf("Assigning name to socket\n");
     if (bind(server_socket, (struct sockaddr *) & server_addr,
             sizeof(server_addr)) != 0) {
@@ -47,7 +49,7 @@ void server_init(char * name) {
     }
     server_port = ntohs(name_addr.sin_port);
     printf("    port=%d\n", server_port);
-    listen(server_socket, 4);
+    listen(server_socket, 5);
     printf("Server Initialized\n");
 }
 
