@@ -40,14 +40,16 @@ void client_init(char * argv[]) {
         printf("connection failed\n");
         exit(4);
     }
-    printf("connected to \007\n");
+    printf("connected to \n");
+    char ip[16];
+    inet_ntop(AF_INET, (struct in_addr *) host_entry->h_addr_list[0], ip, sizeof(ip));
     printf("    hostname=%s IP=%s port=%d\n", host_entry->h_name,
-            inet_ntoa(server_ip.s_addr), server_port);
+            ip, server_port);
 }
 
 int main (int argc, char * argv[], char * env[]) {
     int n;
-    char line[LINEMAX];
+    char line[LINEMAX + 1];
 
     if (argc < 3) {
         printf("Required:\n    cient.bin <<ServerName>> <<ServerPort>>\n");

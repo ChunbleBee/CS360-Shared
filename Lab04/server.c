@@ -22,8 +22,10 @@ void server_init(char * name) {
         exit(1);
     }
     printf("Server host info:\n");
-    printf("    hostname=%s  \n", name);
-    printf("IP=%s\n", inet_ntoa(*(long *)host_entry->h_addr_list[0]));
+    printf("    hostname=%s\n", name);
+    char ip[16];
+    inet_ntop(AF_INET, (struct in_addr *) host_entry->h_addr_list[0], ip, sizeof(ip));
+    printf("    IP=%s\n", ip);
     // printf("IP=%s\n", inet_ntoa(*((struct in_addr *) host_entry->h_addr_list[0])));
     printf("Creating socket\n");
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -32,12 +34,13 @@ void server_init(char * name) {
         exit(2);
     }
     server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = *(long *)host_entry->h_addr_list[0];
+    server_addr.sin_addr = *((struct in_addr *) host_entry->h_addr_list[0]);
+    // server_addr.sin_addr.s_addr = *(long *) host_entry->h_addr_list[0];
     server_addr.sin_port = 0; // kernal will assign port number
     printf("Assigning name to socket\n");
     if (bind(server_socket, (struct sockaddr *) & server_addr,
             sizeof(server_addr)) != 0) {
-        printf("failed to bind socket to address");
+        printf("failed to bind socket to address\n");
         exit(3);
     }
     printf("Getting port number from kernel\n");
@@ -55,18 +58,20 @@ void server_init(char * name) {
 
 int main (int argc, char * argv[], char * env[]) {
     char hostname[256];
-    char line[LINEMAX];
+    char line[LINEMAX + 1];
     int n;
 
-    if (argc < 2)
-        gethostname(hostname, 256);
+    if (argc < 2) {
+        strcpy(hostname, "localhost");
+        // gethostname(hostname, 256);
+    }
     else
         strncpy(hostname, argv[1], 255);
 
     server_init(hostname);
 
     while (1) {
-        printf("server: accepting new connection ...\n");
+        printf("server: accepting new connections . . .\n");
         int len_client_addr = sizeof(client_addr);
         client_socket = accept(server_socket, (struct sockaddr *) & client_addr,
             & len_client_addr);
@@ -75,15 +80,17 @@ int main (int argc, char * argv[], char * env[]) {
             exit(5);
         }
         
-        printf("server: accepteda client:\n");
-        printf("    IP=%s  port=%d\n", inet_ntoa(client_addr.sin_addr.s_addr),
-                ntohs(client_addr.sin_port));
+        printf("server: accepted a client:\n");
+        char ip[16];
+        inet_ntop(AF_INET, &client_addr.sin_addr, ip, sizeof(ip));
+        printf("    IP=%s  port=%d\n", ip, ntohs(client_addr.sin_port));
         if (fork()) { // parent
             close(client_socket);
+            printf("in parent process\n");
         }
         else {
             while (1) { // processing loop
-                printf("server: waiting for request from client ...\n");
+                printf("server: waiting for request from client . . .\n");
                 n = read(client_socket, line, LINEMAX);
                 if (n == 0) {
                     printf("server: client disconnected\n");
