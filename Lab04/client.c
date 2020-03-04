@@ -23,7 +23,7 @@ char * permRestricted = "----------------";
 struct in_addr server_ip;
 
 int server_socket, server_port;
-
+ 
 void client_init(char * argv[]) {
     printf("Initializing client\n");
     host_entry = gethostbyname(argv[1]);
@@ -56,8 +56,7 @@ void client_init(char * argv[]) {
     printf("    hostname=%s IP=%s port=%d\n", host_entry->h_name,
             ip, server_port);
 }
-
-// Author: Taiya Williams
+ 
 void cat(char * line) {
     strtok(line, " ");
     char * file = strtok(NULL, " ");
@@ -80,7 +79,6 @@ void cat(char * line) {
     }
 }
 
-// Author: Taiya Williams
 void ls(char * line) {
     strtok(line, " ");
     char * paramStr = strtok(NULL, " ");
@@ -103,7 +101,6 @@ void ls(char * line) {
     }
 }
 
-// Author: Taiya Williams
 void lsDir(char * dirStr) {
     DIR * dir = opendir(dirStr);
 
@@ -128,7 +125,7 @@ void lsDir(char * dirStr) {
     }
 }
 
-// Author: Taiya Williams
+
 void lsFile(char * fileStr) {
     if (access(fileStr, F_OK) == 0) {
         struct stat * stats = (struct stat *) malloc(sizeof(struct stat));
@@ -170,6 +167,7 @@ void lsFile(char * fileStr) {
     }
 }
 
+
 int main (int argc, char * argv[], char * env[]) {
     int n;
     char line[LINEMAX + 1];
@@ -187,7 +185,8 @@ int main (int argc, char * argv[], char * env[]) {
 
         line[strlen(line) - 1] = NULL;     // kill \n at end
 
-        if (strncmp(line, "quit", 4) == 0){           // exit if NULL line
+        if (strncmp(line, "quit", 4) == 0){
+            write(server_socket, line, LINEMAX);
             exit(0);
         } else if (strncmp(line, "lcat", 3) == 0) {
             cat(line);
@@ -243,18 +242,37 @@ int main (int argc, char * argv[], char * env[]) {
         } else {
             // Send ENTIRE line to server
             n = write(server_socket, line, LINEMAX);
-            printf("client: wrote n=%d bytes; line=(%s)\n", n, line);
-            
-            // Read a line from sock and show it
-            n = read(server_socket, line, LINEMAX);
-            printf("client: read  n=%d bytes; echo=(%s)\n",n, line);
-            
-            if (strncmp(n, "get", 3) == 0) {
+            printf("client: wrote n=%d bytes:\n    %s\n", n, line);
 
-            } else if (strncmp(n, "put", 3) == 0) {
+          
 
-            }
+                if (!strncmp(line, "pwd", 3)) {
+                    read(server_socket, line, LINEMAX);
+                    printf("server:\n    %s\n", line);
+                } else if (!strncmp(line, "ls", 2)) {
+                    printf("server:\n");
+                    while (strncmp(line, "ls done", 7)) {
+                        read(server_socket, line, LINEMAX);
+                        printf("    %s\n", line);
+                    }
+                } else if (!strncmp(line, "cd", 2)) {
+                    printf("TODO\n");
+                } else if (!strncmp(line, "mkdir", 5)) {
+                    printf("TODO\n");
+                } else if (!strncmp(line, "rmdir", 5)) {
+                    printf("TODO\n");
+                } else if (!strncmp(line, "rm", 2)) {
+                    printf("TODO\n");
+                } else if (!strncmp(line, "get", 3)) {
+                    printf("TODO\n");
+                } else if (!strncmp(line, "put", 3)) {
+                    printf("TODO\n");
+                } else if (!strncmp(line, "quit", 4)) {
+                    printf("TODO\n");
+                } else {
+                    read(server_socket, line, LINEMAX);
+                    printf("server\n    %s\n", line);
+                }
         }
-
     }
 }
