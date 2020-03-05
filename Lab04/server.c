@@ -281,7 +281,6 @@ int main (int argc, char * argv[], char * env[]) {
 
     getcwd(cwd, 4096);
     int changed = chroot(cwd);
-    printf("%i %s\n", changed, cwd);
 
     if (changed != 0) {
         printf("error: chroot failed\n");
@@ -410,6 +409,9 @@ int main (int argc, char * argv[], char * env[]) {
                         if (fdesc != -1) {
                             sprintf(line, "opened file for writing\n");
                             write(client_socket, line, LINEMAX);
+
+                            read(client_socket, line, LINEMAX);
+                            printf("client: %s\n", line);
 
                             long length = 0;
                             read(client_socket, &length, sizeof(long));

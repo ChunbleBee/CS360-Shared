@@ -1,11 +1,11 @@
 #! /bin/bash
 
-touch server.bin
-rm server.bin
-gcc -o server.bin server.c
-sudo chown root:root server.bin
-sudo chmod u+s server.bin
+touch serverhome/server.bin
+rm serverhome/server.bin
+gcc -o serverhome/server.bin server.c
+sudo chown root:root serverhome/server.bin
+sudo chmod u+s serverhome/server.bin
 
-touch client.bin
-rm client.bin
-gcc -o client.bin client.c
+touch clienthome/client.bin
+rm clienthome/client.bin
+gcc -o clienthome/client.bin client.c

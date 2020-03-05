@@ -188,13 +188,15 @@ void put(char * line) {
             stat(file, &fstat);
             long length = fstat.st_size;
 
-            write(server_socket, line, LINEMAX);
             read(server_socket, line, LINEMAX);
             printf("server: %s", line);
             if (strncmp(line, "error", 5) == 0) {
                 close(fdesc);
                 return;
             }
+
+            sprintf(line, "ready to send file\n");
+            write(server_socket, line, LINEMAX);
 
             write(server_socket, &(fstat.st_size), sizeof(long));
             printf("sending total file length: %ld bytes\n", length);
