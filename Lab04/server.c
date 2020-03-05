@@ -125,7 +125,7 @@ void ls(char * line) {
         free(stats);
     } else {
         write(client_socket, "Permissions Links Group Owner Size Date Name\n", LINEMAX);
-        lsDir(cwd);
+        lsDir("./");
     }
 }
 
@@ -186,20 +186,20 @@ void lsFile(char * fileStr) {
 
         sprintf(
             line,
-            "%s %ld %d %d %ld %s %s \n",
+            "%s %ld %d %d %ld %s %s\n",
             permissions,
             stats->st_nlink,
             stats->st_gid,
             stats->st_uid,
             stats->st_size,
             fileTime,
-            fileStr
+            fileStr + 2
         );
         write(client_socket, line, LINEMAX);
 
         free(stats);
     } else {
-        write(client_socket, "Error: no such directory [ ", LINEMAX);
+        write(client_socket, "Error: no such file [ ", LINEMAX);
         write(client_socket, fileStr, LINEMAX);
         write(client_socket, " ] found.\n", LINEMAX);
     }
@@ -271,13 +271,18 @@ int main (int argc, char * argv[], char * env[]) {
 
                 if (strncmp(line, "pwd", 3) == 0) {
                     strncpy(line, cwd, LINEMAX);
+                    printf("sending: %s\n", line);
                     write(client_socket, line, LINEMAX);
                 } else if (strncmp(line, "ls", 2) == 0) {
                     ls(line);
                 } else if (strncmp(line, "cat", 3) == 0) {
                     cat(line);
                 } else if (!strncmp(line, "cd", 2)) {
-                    write(client_socket, "TODO", 4);
+                    strtok(line, " ");
+                    char * dirpath = strtok(NULL, " ");
+                    if (chdir(dirpath) != 0)
+                        write(client_socket, "error: could not find directory\n", LINEMAX);
+                    getcwd(cwd, 4096);
                 } else if (strncmp(line, "mkdir", 5) == 0) {
                     strtok(line, " ");
                     char * name = strtok(NULL, " ");

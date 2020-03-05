@@ -164,7 +164,7 @@ void lsFile(char * fileStr) {
         printf(" %d", stats->st_uid);
         printf(" %ld", stats->st_size);
         printf(" %s", fileTime);
-        printf(" %s\n", fileStr);
+        printf(" %s\n", fileStr + 2);
 
         free(stats);
     } else {
@@ -184,8 +184,8 @@ int main (int argc, char * argv[], char * env[]) {
 
     client_init(argv);
     while (true) {
-        printf("| get  put  ls  cd  pwd  mkdir  rmdir  rm |\n");
-        printf("| lcat     lls lcd lpwd lmkdir lrmdir lrm |\n");
+        printf("| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |\n");
+        printf("|          lcat lls lcd lpwd lmkdir lrmdir lrm |\n");
         printf("input a line : ");
         bzero(line, LINEMAX);                // zero out line[ ]
         fgets(line, LINEMAX, stdin);         // get a line (end with \n) from stdin
@@ -204,7 +204,10 @@ int main (int argc, char * argv[], char * env[]) {
         } else if (strncmp(line, "lls", 3) == 0) {
             ls(line);
         } else if (strncmp(line, "lcd", 3) == 0) {
-            //Change local working directory
+            strtok(line, " ");
+            char * dirpath = strtok(NULL, " ");
+            if (chdir(dirpath) != 0)
+                printf("error: could not find directory\n");
         } else if (strncmp(line, "lmkdir", 6) == 0) {
             strtok(line, " ");
             char * name = strtok(NULL, " ");
@@ -253,13 +256,16 @@ int main (int argc, char * argv[], char * env[]) {
                 strncmp(line, "mkdir", 5) == 0 ||
                 strncmp(line, "rmdir", 5) == 0 ||
                 strncmp(line, "rm", 2) == 0 ||
-                strncmp(line, "cd", 2) == 0
-            ) {
+                strncmp(line, "cd", 2) == 0) {
                 printf("\tServer Response:\n\n");
+                bzero(line, LINEMAX);
+                read(server_socket, line, LINEMAX);
                 while (strcmp(line, "") != 0) {
-                    read(server_socket, line, LINEMAX);
                     printf("%s", line);
+                    bzero(line, LINEMAX);
+                    read(server_socket, line, LINEMAX);
                 }
+                printf("\n");
             } else if (strncmp(line, "get", 3) == 0) {
                 read(server_socket, line, LINEMAX);
                 printf("TODO - get\n");
@@ -268,7 +274,7 @@ int main (int argc, char * argv[], char * env[]) {
                 printf("TODO - put\n");
             } else {
                 read(server_socket, line, LINEMAX);
-                printf("server\n    %s\n", line);
+                printf("server:\n    %s\n", line);
             }
         }
     }
