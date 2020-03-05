@@ -71,6 +71,48 @@ void server_init(char * name) {
     printf("    port=%d\n", server_port);
     listen(server_socket, 5);
     printf("Server Initialized\n");
+} 
+
+void get(char * line) {
+    strtok(line, " ");
+    char * file = strtok(NULL, " ");
+
+    if (access(file, F_OK) >= 0) {
+        int fdesc = open(file, O_RDONLY);
+
+        if (fdesc != -1) {
+            struct stat fstat;
+            stat(file, &fstat);
+            long length = fstat.st_size;
+
+            sprintf(line, "file found\n");
+            write(client_socket, line, LINEMAX);
+
+            write(client_socket, &length, sizeof(long));
+            printf("sending total file length: %ld bytes\n", length);
+            int n;
+            while (length > LINEMAX) {
+                n = read(fdesc, line, LINEMAX);
+                length -= n;
+                write(client_socket, line, LINEMAX);
+                printf("wrote n=%d bytes to client, remaining length=%ld\n",
+                        n, length);
+            }
+            n = read(fdesc, line, LINEMAX);
+            length -= n;
+            write(client_socket, line, n);
+            printf("wrote n=%d bytes to client, remaining length=%ld\n",
+                    n, length);
+        } else {
+            write(client_socket, "Error: could not open file [ ", LINEMAX);
+            write(client_socket, file, LINEMAX);
+            write(client_socket, " ] for reading.\n", LINEMAX);
+        }
+    } else {
+        write(client_socket, "Error: could not open file [ ", LINEMAX);
+        write(client_socket, file, LINEMAX);
+        write(client_socket, " ] for reading.\n", LINEMAX);
+    }
 }
  
 void cat(char * line) {
@@ -84,6 +126,9 @@ void cat(char * line) {
             struct stat fstat;
             stat(file, &fstat);
             long length = fstat.st_size;
+            
+            sprintf(line, "file found\n");
+            write(client_socket, line, LINEMAX);
 
             write(client_socket, &length, sizeof(long));
             printf("sending total file length: %ld bytes\n", length);
@@ -352,9 +397,13 @@ int main (int argc, char * argv[], char * env[]) {
                         write(client_socket, " ].\n", LINEMAX);
                     }
                 } else if (!strncmp(line, "get", 3)) {
-                    write(client_socket, "Server: TODO -- get\n", LINEMAX);
+                    get(line);
                 } else if (!strncmp(line, "put", 3)) {
                     write(client_socket, "Server: TODO -- put\n", LINEMAX);
+                } else if (!strncmp(line, "quit", 4)) {
+                    printf("server: client quit program\n");
+                    close(client_socket);
+                    exit(0);                    
                 } else {
                     strcpy(line, "server: command not found\n");
                     write(client_socket, line, LINEMAX);
