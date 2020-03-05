@@ -247,25 +247,23 @@ int main (int argc, char * argv[], char * env[]) {
             printf("client: wrote n=%d bytes:\n    %s\n", n, line);
 
             if (
+                strncmp(line, "pwd", 3) == 0 ||
                 strncmp(line, "ls", 2) == 0 ||
-                strncmp(line, "cat", 3) == 0
+                strncmp(line, "cat", 3) == 0 ||
+                strncmp(line, "mkdir", 5) == 0 ||
+                strncmp(line, "rmdir", 5) == 0 ||
+                strncmp(line, "rm", 2) == 0 ||
+                strncmp(line, "cd", 2) == 0
             ) {
                 printf("\tServer Response:\n\n");
                 while (strcmp(line, "") != 0) {
                     read(server_socket, line, LINEMAX);
                     printf("%s", line);
                 }
-            } else if (strncmp(line, "mkdir", 5) == 0){
-                read(server_socket, line, LINEMAX);
-                printf("%s", line);
-                read(server_socket, line, LINEMAX);
-                printf("%s", line);
-                read(server_socket, line, LINEMAX);
-                printf("%s", line);
             } else if (strncmp(line, "get", 3) == 0) {
                 read(server_socket, line, LINEMAX);
                 printf("TODO - get\n");
-            } else if (!strncmp(line, "put", 3) == 0) {
+            } else if (strncmp(line, "put", 3) == 0) {
                 read(server_socket, line, LINEMAX);
                 printf("TODO - put\n");
             } else {

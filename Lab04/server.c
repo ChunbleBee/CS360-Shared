@@ -298,13 +298,45 @@ int main (int argc, char * argv[], char * env[]) {
                         write(client_socket, " ].\n", LINEMAX);
                     }
                 } else if (!strncmp(line, "rmdir", 5)) {
-                    write(client_socket, "TODO", 4);
+                    strtok(line, " ");
+                    char * name = strtok(NULL, " ");
+
+                    if (
+                        name != NULL &&
+                        opendir(name) != NULL
+                    ) {
+                        rmdir(name);
+
+                        write(client_socket, "Successfully removed directory [ ", LINEMAX);
+                        write(client_socket, name, LINEMAX);
+                        write(client_socket, " ].\n", LINEMAX);
+                    } else {
+                        write(client_socket, "Error: could not remove directory [ ", LINEMAX);
+                        write(client_socket, name, LINEMAX);
+                        write(client_socket, " ].\n", LINEMAX);
+                    }
                 } else if (!strncmp(line, "rm", 2)) {
-                    write(client_socket, "TODO", 4);
+                    strtok(line, " ");
+                    char * name = strtok(NULL, " ");
+
+                    if (
+                        name != NULL &&
+                        access(name, F_OK) == 0
+                    ) {
+                        remove(name);
+
+                        write(client_socket, "Successfully removed filed [ ", LINEMAX);
+                        write(client_socket, name, LINEMAX);
+                        write(client_socket, " ].\n", LINEMAX);
+                    } else {
+                        write(client_socket, "Error: could not remove file [ ", LINEMAX);
+                        write(client_socket, name, LINEMAX);
+                        write(client_socket, " ].\n", LINEMAX);
+                    }
                 } else if (!strncmp(line, "get", 3)) {
-                    write(client_socket, "TODO", 4);
+                    write(client_socket, "Server: TODO -- get\n", LINEMAX);
                 } else if (!strncmp(line, "put", 3)) {
-                    write(client_socket, "TODO", 4);
+                    write(client_socket, "Server: TODO -- put\n", LINEMAX);
                 } else {
                     strcpy(line, "server: command not found\n");
                     write(client_socket, line, LINEMAX);
