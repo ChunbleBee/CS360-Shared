@@ -103,6 +103,7 @@ void get(char * line) {
             write(client_socket, line, n);
             printf("wrote n=%d bytes to client, remaining length=%ld\n",
                     n, length);
+            close(fdesc);
         } else {
             write(client_socket, "Error: could not open file [ ", LINEMAX);
             write(client_socket, file, LINEMAX);
@@ -145,6 +146,7 @@ void cat(char * line) {
             write(client_socket, line, n);
             printf("wrote n=%d bytes to client, remaining length=%ld\n",
                     n, length);
+            close(fdesc);
         } else {
             write(client_socket, "Error: could not open file [ ", LINEMAX);
             write(client_socket, file, LINEMAX);
@@ -399,7 +401,41 @@ int main (int argc, char * argv[], char * env[]) {
                 } else if (!strncmp(line, "get", 3)) {
                     get(line);
                 } else if (!strncmp(line, "put", 3)) {
-                    write(client_socket, "Server: TODO -- put\n", LINEMAX);
+                    char linecpy[LINEMAX + 1];
+                    strcpy(linecpy, line);
+                    strtok(linecpy, " ");
+                    char * filename = strtok(NULL, " ");
+                    if (access(filename, F_OK) != 0) {
+                        int fdesc = open(filename, O_WRONLY|O_CREAT, 0644);
+                        if (fdesc != -1) {
+                            sprintf(line, "opened file for writing\n");
+                            write(client_socket, line, LINEMAX);
+
+                            long length = 0;
+                            read(client_socket, &length, sizeof(long));
+                            printf("Total File Length: %ld bytes:\n\n", length);
+                            int n;
+                            while (length > LINEMAX) {
+                                n = read(client_socket, line, LINEMAX);
+                                length -= n;
+                                write(fdesc, line, LINEMAX);
+                                printf("wrote n=%d bytes to file=%s, reamaining length=%ld\n",
+                                        n, filename, length);
+                            }
+                            n = read(client_socket, line, length);
+                            write(fdesc, line, n);
+                            length -= n;
+                            printf("write n=%d bytes to file=%s, remaining length=%ld\n",
+                                    n, filename, length);
+                            close(fdesc);
+                        } else {
+                            sprintf(line, "error: could not open file for writing\n");
+                            write(client_socket, line, LINEMAX);
+                        }
+                    } else {
+                        sprintf(line, "error: file already exists\n");
+                        write(client_socket, line, LINEMAX);
+                    }
                 } else if (!strncmp(line, "quit", 4)) {
                     printf("server: client quit program\n");
                     close(client_socket);

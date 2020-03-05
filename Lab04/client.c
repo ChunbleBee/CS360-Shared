@@ -76,6 +76,7 @@ void cat(char * line) {
                 bzero(buffer, 1024);
             }
             printf("\n");
+            close(fdesc);
         } else {
             printf("Error: could not open file [ %s ] for reading.\n", file);
         }
@@ -125,6 +126,7 @@ void lsDir(char * dirStr) {
             lsFile(path);
             treebeard = readdir(dir);
         }
+        closedir(dir);
     } else {
         printf("Error: no such directory [ %s ] found.\n", dirStr);
     }
@@ -169,6 +171,52 @@ void lsFile(char * fileStr) {
         free(stats);
     } else {
         printf("Error: no such file [ %s ] found.\n", fileStr);
+    }
+}
+
+void put(char * line) {
+    char linecpy[LINEMAX + 1];
+    strcpy(linecpy, line);
+    strtok(linecpy, " ");
+    char * file = strtok(NULL, " ");
+
+    if (access(file, F_OK) >= 0) {
+        int fdesc = open(file, O_RDONLY);
+
+        if (fdesc != -1) {
+            struct stat fstat;
+            stat(file, &fstat);
+            long length = fstat.st_size;
+
+            write(server_socket, line, LINEMAX);
+            read(server_socket, line, LINEMAX);
+            printf("server: %s", line);
+            if (strncmp(line, "error", 5) == 0) {
+                close(fdesc);
+                return;
+            }
+
+            write(server_socket, &(fstat.st_size), sizeof(long));
+            printf("sending total file length: %ld bytes\n", length);
+            int n;
+            while (length > LINEMAX) {
+                n = read(fdesc, line, LINEMAX);
+                length -= n;
+                write(server_socket, line, LINEMAX);
+                printf("wrote n=%d bytes to client, remaining length=%ld\n",
+                        n, length);
+            }
+            n = read(fdesc, line, LINEMAX);
+            length -= n;
+            write(server_socket, line, n);
+            printf("wrote n=%d bytes to client, remaining length=%ld\n",
+                    n, length);
+            close(fdesc);
+        } else {
+            printf("Error: could not open file [ %s ] for reading.\n", file);
+        }
+    } else {
+        printf("Error: could not open file [ %s ] for reading.\n", file);
     }
 }
 
@@ -324,14 +372,16 @@ int main (int argc, char * argv[], char * env[]) {
                     write(fd, line, n);
                     printf("wrote n=%d bytes to file=%s, remaining length=%ld\n",
                             n, filename, length);
+                    close(fd);
                 }
                 read(server_socket, line, LINEMAX);
             } else if (strncmp(line, "put", 3) == 0) {
+                put(line);
                 read(server_socket, line, LINEMAX);
-                printf("TODO - put\n");
             } else {
                 read(server_socket, line, LINEMAX);
                 printf("server:\n    %s\n", line);
+                read(server_socket, line, LINEMAX);
             }
         }
     }
