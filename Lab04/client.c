@@ -150,15 +150,15 @@ void lsFile(char * fileStr) {
             }
         }
 
-        char * filetime = ctime(&(stats->st_ctime));
-        filetime[strlen(filetime) - 1] = "\0";
+        char * fileTime = ctime(&(stats->st_ctime));
+        fileTime[strlen(fileTime) - 1] = "\0";
         
         // Permissions Links Group Owner Size Date Name
         printf(" %d", stats->st_nlink);
         printf(" %d", stats->st_gid);
         printf(" %d", stats->st_uid);
         printf(" %d", stats->st_size);
-        printf(" %s", filetime);
+        printf(" %s", fileTime);
         printf(" %s\n", fileStr);
 
         free(stats);
@@ -244,35 +244,32 @@ int main (int argc, char * argv[], char * env[]) {
             n = write(server_socket, line, LINEMAX);
             printf("client: wrote n=%d bytes:\n    %s\n", n, line);
 
-          
-
-                if (!strncmp(line, "pwd", 3)) {
+            if (
+                strncmp(line, "ls", 2) == 0 ||
+                strncmp(line, "cat", 3) == 0
+            ) {
+                printf("\tServer Response:\n\n");
+                while (strcmp(line, "") != 0) {
                     read(server_socket, line, LINEMAX);
-                    printf("server:\n    %s\n", line);
-                } else if (!strncmp(line, "ls", 2)) {
-                    printf("server:\n");
-                    while (strncmp(line, "ls done", 7)) {
-                        read(server_socket, line, LINEMAX);
-                        printf("    %s\n", line);
-                    }
-                } else if (!strncmp(line, "cd", 2)) {
-                    printf("TODO\n");
-                } else if (!strncmp(line, "mkdir", 5)) {
-                    printf("TODO\n");
-                } else if (!strncmp(line, "rmdir", 5)) {
-                    printf("TODO\n");
-                } else if (!strncmp(line, "rm", 2)) {
-                    printf("TODO\n");
-                } else if (!strncmp(line, "get", 3)) {
-                    printf("TODO\n");
-                } else if (!strncmp(line, "put", 3)) {
-                    printf("TODO\n");
-                } else if (!strncmp(line, "quit", 4)) {
-                    printf("TODO\n");
-                } else {
-                    read(server_socket, line, LINEMAX);
-                    printf("server\n    %s\n", line);
+                    printf("%s", line);
                 }
+            } else if (strncmp(line, "mkdir", 5) == 0){
+                read(server_socket, line, LINEMAX);
+                printf("%s", line);
+                read(server_socket, line, LINEMAX);
+                printf("%s", line);
+                read(server_socket, line, LINEMAX);
+                printf("%s", line);
+            } else if (strncmp(line, "get", 3) == 0) {
+                read(server_socket, line, LINEMAX);
+                printf("TODO - get\n");
+            } else if (!strncmp(line, "put", 3) == 0) {
+                read(server_socket, line, LINEMAX);
+                printf("TODO - put\n");
+            } else {
+                read(server_socket, line, LINEMAX);
+                printf("server\n    %s\n", line);
+            }
         }
     }
 }
