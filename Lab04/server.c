@@ -12,6 +12,8 @@
 #include <stdbool.h>
 #include <time.h>
 
+#include <arpa/inet.h>
+
 #define LINEMAX 256
 
 char * permAvailable =  "xwrxwrxwr-------";
@@ -25,6 +27,9 @@ int server_socket, client_socket, server_port;
 
 char cwd[4096];
 char line[LINEMAX + 1];
+
+void lsFile(char * fileStr);
+void lsDir(char * dirStr);
 
 void server_init(char * name) {
     printf("Initializing server\n");
@@ -139,9 +144,9 @@ void lsDir(char * dirStr) {
         char path[4356]; //max path length + entry name size = 4096 + 260 = 4356 characters
         while(treebeard != NULL) {
             bzero(path, 4356);
-            strcat(&path, dirStr);
-            strcat(&path, treebeard->d_name);
-            lsFile(&path);
+            strcat(path, dirStr);
+            strcat(path, treebeard->d_name);
+            lsFile(path);
             treebeard = readdir(dir);
         }
     } else {
@@ -157,7 +162,7 @@ void lsFile(char * fileStr) {
         lstat(fileStr, stats);
 
         char permissions[10];
-        permissions[0] = "d"; //Other/unknown type
+        permissions[0] = 'd'; //Other/unknown type
 
         if (S_ISDIR(stats->st_mode)) {
             permissions[0] = 'd';
@@ -176,12 +181,12 @@ void lsFile(char * fileStr) {
         }
 
         char * fileTime = ctime(&(stats->st_ctime));
-        fileTime[strlen(fileTime) - 1] = "\0";
+        fileTime[strlen(fileTime) - 1] = '\0';
         bzero(line, LINEMAX);
 
         sprintf(
             line,
-            "%s %d %d %d %d %s %s \n",
+            "%s %ld %d %d %ld %s %s \n",
             permissions,
             stats->st_nlink,
             stats->st_gid,
@@ -205,15 +210,6 @@ int main (int argc, char * argv[], char * env[]) {
     char hostname[256];
     int n;
 
-    getcwd(cwd, 4096);
-    if (chroot(cwd) >= 0) {
-        printf("error: chroot failed\n");
-        exit(8);
-    }
-
-    strcpy(cwd, "/");
-    printf("server: changed root to current directory\n");
-
     if (argc < 2) {
         strcpy(hostname, "localhost");
         // gethostname(hostname, 256);
@@ -222,6 +218,27 @@ int main (int argc, char * argv[], char * env[]) {
         strncpy(hostname, argv[1], 255);
 
     server_init(hostname);
+
+    getcwd(cwd, 4096);
+    int changed = chroot(cwd);
+    printf("%i %s\n", changed, cwd);
+
+    if (changed != 0) {
+        printf("error: chroot failed\n");
+        exit(8);
+    }
+    chdir("/");
+    getcwd(cwd, 4096);
+    printf("server: changed root to current directory\n");
+    if (setgid(getgid()) == -1) {
+        printf("error: failed to release permissions\n");
+        exit(9);
+    }
+    if (setuid(getuid()) == -1) {
+        printf("error: failed to release permissions\n");
+        exit(10);
+    }
+    printf("server: released root privileges\n");
 
     while (true) {
         printf("server: accepting new connections . . .\n");
@@ -264,18 +281,13 @@ int main (int argc, char * argv[], char * env[]) {
                 } else if (strncmp(line, "mkdir", 5) == 0) {
                     strtok(line, " ");
                     char * name = strtok(NULL, " ");
-                    char * mode = strtok(NULL, " ");
-                    printf("\t%s %s\n", name, mode);
+                    printf("\t%s %s\n", name, "0755");
 
                     if (
                         name != NULL &&
                         opendir(name) == NULL
                     ) {
-                        if (mode == NULL) {
-                            mkdir(name, mode);
-                        } else {
-                            mkdir(name, "755");
-                        }
+                        mkdir(name, 0755);
     
                         write(client_socket, "Created directory [ ", LINEMAX);
                         write(client_socket, name, LINEMAX);

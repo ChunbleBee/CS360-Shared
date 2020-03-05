@@ -12,6 +12,8 @@
 #include <stdbool.h>
 #include <time.h>
 
+#include <arpa/inet.h>
+
 #define LINEMAX 256
 
 struct hostent * host_entry;
@@ -23,6 +25,9 @@ char * permRestricted = "----------------";
 struct in_addr server_ip;
 
 int server_socket, server_port;
+
+void lsFile(char * fileStr);
+void lsDir(char * dirStr);
  
 void client_init(char * argv[]) {
     printf("Initializing client\n");
@@ -115,9 +120,9 @@ void lsDir(char * dirStr) {
         char path[4356]; //max path length + entry name size = 4096 + 260 = 4356 characters
         while(treebeard != NULL) {
             bzero(path, 4356);
-            strcat(&path, dirStr);
-            strcat(&path, treebeard->d_name);
-            lsFile(&path);
+            strcat(path, dirStr);
+            strcat(path, treebeard->d_name);
+            lsFile(path);
             treebeard = readdir(dir);
         }
     } else {
@@ -151,13 +156,13 @@ void lsFile(char * fileStr) {
         }
 
         char * fileTime = ctime(&(stats->st_ctime));
-        fileTime[strlen(fileTime) - 1] = "\0";
+        fileTime[strlen(fileTime) - 1] = '\0';
         
         // Permissions Links Group Owner Size Date Name
-        printf(" %d", stats->st_nlink);
+        printf(" %ld", stats->st_nlink);
         printf(" %d", stats->st_gid);
         printf(" %d", stats->st_uid);
-        printf(" %d", stats->st_size);
+        printf(" %ld", stats->st_size);
         printf(" %s", fileTime);
         printf(" %s\n", fileStr);
 
@@ -179,11 +184,13 @@ int main (int argc, char * argv[], char * env[]) {
 
     client_init(argv);
     while (true) {
+        printf("| get  put  ls  cd  pwd  mkdir  rmdir  rm |\n");
+        printf("| lcat     lls lcd lpwd lmkdir lrmdir lrm |\n");
         printf("input a line : ");
         bzero(line, LINEMAX);                // zero out line[ ]
         fgets(line, LINEMAX, stdin);         // get a line (end with \n) from stdin
 
-        line[strlen(line) - 1] = NULL;     // kill \n at end
+        line[strlen(line) - 1] = '\0';
 
         if (strncmp(line, "quit", 4) == 0){
             write(server_socket, line, LINEMAX);
@@ -192,7 +199,7 @@ int main (int argc, char * argv[], char * env[]) {
             cat(line);
         } else if (strncmp(line, "lpwd", 4) == 0) {
             char buffer[512];
-            getcwd(&buffer, 512);
+            getcwd(buffer, 512);
             printf("%s\n", buffer);
         } else if (strncmp(line, "lls", 3) == 0) {
             ls(line);
@@ -201,17 +208,12 @@ int main (int argc, char * argv[], char * env[]) {
         } else if (strncmp(line, "lmkdir", 6) == 0) {
             strtok(line, " ");
             char * name = strtok(NULL, " ");
-            char * mode = strtok(NULL, " ");
 
             if (
                 name != NULL &&
                 opendir(name) == NULL
             ) {
-                if (mode == NULL) {
-                    mkdir(name, mode);
-                } else {
-                    mkdir(name, "755");
-                }
+                mkdir(name, 0755);
             }  else {
                 printf("Error: could not create directory [ %s ].\n", name);
             }

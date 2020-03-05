@@ -3,6 +3,8 @@
 touch server.bin
 rm server.bin
 gcc -o server.bin server.c
+sudo chown root:root server.bin
+sudo chmod u+s server.bin
 
 touch client.bin
 rm client.bin
