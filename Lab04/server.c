@@ -78,15 +78,28 @@ void cat(char * line) {
     char * file = strtok(NULL, " ");
 
     if (access(file, F_OK) >= 0) {
-        char buffer[LINEMAX];
         int fdesc = open(file, O_RDONLY);
 
         if (fdesc != -1) {
-            while (read(fdesc, &buffer, LINEMAX) > 0) {
-                write(client_socket, buffer, LINEMAX);
-                bzero(buffer, LINEMAX);
+            struct stat fstat;
+            stat(file, &fstat);
+            long length = fstat.st_size;
+
+            write(client_socket, &length, sizeof(long));
+            printf("sending total file length: %ld bytes\n", length);
+            int n;
+            while (length > LINEMAX) {
+                n = read(fdesc, line, LINEMAX);
+                length -= n;
+                write(client_socket, line, LINEMAX);
+                printf("wrote n=%d bytes to client, remaining length=%ld\n",
+                        n, length);
             }
-            write(client_socket, "\n", LINEMAX);
+            n = read(fdesc, line, LINEMAX);
+            length -= n;
+            write(client_socket, line, n);
+            printf("wrote n=%d bytes to client, remaining length=%ld\n",
+                    n, length);
         } else {
             write(client_socket, "Error: could not open file [ ", LINEMAX);
             write(client_socket, file, LINEMAX);

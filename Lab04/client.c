@@ -252,7 +252,6 @@ int main (int argc, char * argv[], char * env[]) {
             if (
                 strncmp(line, "pwd", 3) == 0 ||
                 strncmp(line, "ls", 2) == 0 ||
-                strncmp(line, "cat", 3) == 0 ||
                 strncmp(line, "mkdir", 5) == 0 ||
                 strncmp(line, "rmdir", 5) == 0 ||
                 strncmp(line, "rm", 2) == 0 ||
@@ -266,6 +265,22 @@ int main (int argc, char * argv[], char * env[]) {
                     read(server_socket, line, LINEMAX);
                 }
                 printf("\n");
+            } else if (strncmp(line, "cat", 3) == 0) {
+                printf("\tServer Response:\n\n");
+                bzero(line, LINEMAX + 1);
+                long length = 0;
+                read(server_socket, &length, sizeof(long));
+                printf("Total File Length: %ld bytes:\n\n", length);
+                int n;
+                while (length > LINEMAX) {
+                    n = read(server_socket, line, LINEMAX);
+                    length -= n;
+                    printf("%s", line);
+                }
+                n = read(server_socket, line, length);
+                line[n] = '\0';
+                printf("%s\n\nfinished transmission\n", line);
+                read(server_socket, line, LINEMAX);
             } else if (strncmp(line, "get", 3) == 0) {
                 read(server_socket, line, LINEMAX);
                 printf("TODO - get\n");
