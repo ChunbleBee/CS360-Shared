@@ -1,0 +1,105 @@
+$ sudo ./server.bin 192.168.0.109
+Initializing server
+Server host info:
+    hostname=192.168.0.109
+    IP=192.168.0.109
+Creating socket
+Assigning name to socket
+Getting port number from kernel
+    port=58210
+Server Initialized
+server: changed root to current directory
+server: released root privileges
+server: accepting new connections . . .
+server: accepted a client:
+    IP=192.168.0.112  port=58922
+in parent process
+server: waiting for request from client . . .
+server: accepting new connections . . .
+server: read n=256 bytes:
+    ls
+server: waiting for request from client . . .
+server: read n=256 bytes:
+    pwd
+sending: /
+server: waiting for request from client . . .
+server: read n=256 bytes:
+    cat clientfile1
+server: waiting for request from client . . .
+server: read n=256 bytes:
+    cat serverfile1
+sending total file length: 20 bytes
+wrote n=20 bytes to client, remaining length=0
+server: waiting for request from client . . .
+server: read n=256 bytes:
+    ls
+server: waiting for request from client . . .
+server: read n=256 bytes:
+    get serverfile1
+sending total file length: 20 bytes
+wrote n=20 bytes to client, remaining length=0
+server: waiting for request from client . . .
+server: read n=256 bytes:
+    rm serverfile1
+server: waiting for request from client . . .
+server: read n=256 bytes:
+    ls
+server: waiting for request from client . . .
+server: read n=256 bytes:
+    put serverfile1
+client: ready to send file
+
+Total File Length: 20 bytes:
+
+write n=20 bytes to file=serverfile1, remaining length=0
+server: waiting for request from client . . .
+server: read n=256 bytes:
+    ls
+server: waiting for request from client . . .
+server: accepted a client:
+    IP=192.168.0.109  port=58221
+in parent process
+server: accepting new connections . . .
+server: waiting for request from client . . .
+server: read n=256 bytes:
+    put clientfile1
+client: ready to send file
+
+Total File Length: 14 bytes:
+
+write n=14 bytes to file=clientfile1, remaining length=0
+server: waiting for request from client . . .
+server: read n=256 bytes:
+    rm clientfile1
+server: waiting for request from client . . .
+server: read n=256 bytes:
+    mkdir directory
+        directory 0755
+server: waiting for request from client . . .
+server: read n=256 bytes:
+    ls
+server: waiting for request from client . . .
+server: read n=256 bytes:
+    cd directory
+server: waiting for request from client . . .
+server: read n=256 bytes:
+    pwd
+sending: /directory
+server: waiting for request from client . . .
+server: read n=256 bytes:
+    cd ../
+server: waiting for request from client . . .
+server: read n=256 bytes:
+    pwd
+sending: /
+server: waiting for request from client . . .
+server: read n=256 bytes:
+    rmdir directory
+server: waiting for request from client . . .
+server: read n=256 bytes:
+    ls
+server: waiting for request from client . . .
+server: read n=256 bytes:
+    WOOOOOT
+server: waiting for request from client . . .
+server: client disconnected
