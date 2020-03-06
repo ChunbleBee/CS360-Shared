@@ -1,0 +1,311 @@
+$ ./client.bin 192.168.0.109 58210
+Initializing client
+Creating TCP socket
+Connecting to server
+connected to 
+    hostname=192.168.0.109 IP=192.168.0.109 port=58210
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : lls
+dxwrxwrxw 1 1000 1000 4096 Thu Mar  5 15:50:26 2020 .
+dxwrxwrxw 1 1000 1000 4096 Thu Mar  5 15:48:09 2020 ..
+-xwrxwrxw 1 1000 1000 22744 Thu Mar  5 15:45:31 2020 client.bin
+-xwrxwrxw 1 1000 1000 14 Thu Mar  5 15:20:02 2020 clientfile1
+-xwrxwrxw 1 1000 1000 0 Thu Mar  5 15:50:26 2020 output.txt
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : ls
+client: wrote n=256 bytes:
+    ls
+	Server Response:
+
+Permissions Links Group Owner Size Date Name
+dxwrxwrxw 1 1000 1000 4096 Thu Mar  5 23:47:41 2020 .
+dxwrxwrxw 1 1000 1000 4096 Thu Mar  5 23:47:41 2020 ..
+-xwrxwrxw 1 1000 1000 23120 Thu Mar  5 23:45:11 2020 server.bin
+-xwrxwrxw 1 1000 1000 20 Thu Mar  5 23:44:48 2020 serverfile1
+-xwrxwrxw 1 1000 1000 64 Thu Mar  5 23:47:44 2020 serverfile2
+
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : p lpwd
+/mnt/c/Users/Tai/Documents/GitHub/CS360-Shared/Lab04/clienthome
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : pwd
+client: wrote n=256 bytes:
+    pwd
+	Server Response:
+
+/
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : cat clientfile1
+client: wrote n=256 bytes:
+    cat clientfile1
+	Server Response:
+    Error: could not open file [ clientfile1 ] for reading.
+
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : lcat clientfile1
+thisisinafile
+
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : cat sere verfile1
+client: wrote n=256 bytes:
+    cat serverfile1
+	Server Response:
+    file found
+
+Total File Length: 20 bytes:
+
+this is a file
+yup
+
+
+
+finished transmission
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : c m lmkdir   directory
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : cd  lc  lls
+dxwrxwrxw 1 1000 1000 4096 Thu Mar  5 15:52:53 2020 .
+dxwrxwrxw 1 1000 1000 4096 Thu Mar  5 15:48:09 2020 ..
+-xwrxwrxw 1 1000 1000 22744 Thu Mar  5 15:45:31 2020 client.bin
+-xwrxwrxw 1 1000 1000 14 Thu Mar  5 15:20:02 2020 clientfile1
+dxwrxwrxw 1 1000 1000 4096 Thu Mar  5 15:52:53 2020 directory
+-xwrxwrxw 1 1000 1000 0 Thu Mar  5 15:50:26 2020 output.txt
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : lcd directr ory
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : lpwd
+/mnt/c/Users/Tai/Documents/GitHub/CS360-Shared/Lab04/clienthome/directory
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : lcd ../
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : lls   lpwd
+/mnt/c/Users/Tai/Documents/GitHub/CS360-Shared/Lab04/clienthome
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : r lrmdir directory
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : lls
+dxwrxwrxw 1 1000 1000 4096 Thu Mar  5 15:53:30 2020 .
+dxwrxwrxw 1 1000 1000 4096 Thu Mar  5 15:48:09 2020 ..
+-xwrxwrxw 1 1000 1000 22744 Thu Mar  5 15:45:31 2020 client.bin
+-xwrxwrxw 1 1000 1000 14 Thu Mar  5 15:20:02 2020 clientfile1
+-xwrxwrxw 1 1000 1000 0 Thu Mar  5 15:50:26 2020 output.txt
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : ls
+client: wrote n=256 bytes:
+    ls
+	Server Response:
+
+Permissions Links Group Owner Size Date Name
+dxwrxwrxw 1 1000 1000 4096 Thu Mar  5 23:47:41 2020 .
+dxwrxwrxw 1 1000 1000 4096 Thu Mar  5 23:47:41 2020 ..
+-xwrxwrxw 1 1000 1000 23120 Thu Mar  5 23:45:11 2020 server.bin
+-xwrxwrxw 1 1000 1000 20 Thu Mar  5 23:44:48 2020 serverfile1
+-xwrxwrxw 1 1000 1000 64 Thu Mar  5 23:47:44 2020 serverfile2
+
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : get serverfile1
+client: wrote n=256 bytes:
+    get serverfile1
+	Server Response:
+    file found
+
+Total File Length: 20 bytes:
+
+wrote n=20 bytes to file=serverfile1, remaining length=20
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : lls
+dxwrxwrxw 1 1000 1000 4096 Thu Mar  5 15:53:54 2020 .
+dxwrxwrxw 1 1000 1000 4096 Thu Mar  5 15:48:09 2020 ..
+-xwrxwrxw 1 1000 1000 22744 Thu Mar  5 15:45:31 2020 client.bin
+-xwrxwrxw 1 1000 1000 14 Thu Mar  5 15:20:02 2020 clientfile1
+-xwrxwrxw 1 1000 1000 4096 Thu Mar  5 15:53:33 2020 output.txt
+-xwrxwrxw 1 1000 1000 20 Thu Mar  5 15:53:54 2020 serverfile1
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : rm serverfile1
+client: wrote n=256 bytes:
+    rm serverfile1
+	Server Response:
+
+Successfully removed filed [ serverfile1 ].
+
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : ls
+client: wrote n=256 bytes:
+    ls
+	Server Response:
+
+Permissions Links Group Owner Size Date Name
+dxwrxwrxw 1 1000 1000 4096 Thu Mar  5 23:53:58 2020 .
+dxwrxwrxw 1 1000 1000 4096 Thu Mar  5 23:53:58 2020 ..
+-xwrxwrxw 1 1000 1000 23120 Thu Mar  5 23:45:11 2020 server.bin
+-xwrxwrxw 1 1000 1000 64 Thu Mar  5 23:47:44 2020 serverfile2
+
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : put serverfile1
+client: wrote n=256 bytes:
+    put serverfile1
+server: opened file for writing
+sending total file length: 20 bytes
+wrote n=20 bytes to client, remaining length=0
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : lls
+dxwrxwrxw 1 1000 1000 4096 Thu Mar  5 15:53:54 2020 .
+dxwrxwrxw 1 1000 1000 4096 Thu Mar  5 15:48:09 2020 ..
+-xwrxwrxw 1 1000 1000 22744 Thu Mar  5 15:45:31 2020 client.bin
+-xwrxwrxw 1 1000 1000 14 Thu Mar  5 15:20:02 2020 clientfile1
+-xwrxwrxw 1 1000 1000 4096 Thu Mar  5 15:53:33 2020 output.txt
+-xwrxwrxw 1 1000 1000 20 Thu Mar  5 15:53:54 2020 serverfile1
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : ls
+client: wrote n=256 bytes:
+    ls
+	Server Response:
+
+Permissions Links Group Owner Size Date Name
+dxwrxwrxw 1 1000 1000 4096 Thu Mar  5 23:54:15 2020 .
+dxwrxwrxw 1 1000 1000 4096 Thu Mar  5 23:54:15 2020 ..
+-xwrxwrxw 1 1000 1000 23120 Thu Mar  5 23:45:11 2020 server.bin
+-xwrxwrxw 1 1000 1000 20 Thu Mar  5 23:54:17 2020 serverfile1
+-xwrxwrxw 1 1000 1000 64 Thu Mar  5 23:47:44 2020 serverfile2
+
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : rm serverfile1
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : put clientfile1
+client: wrote n=256 bytes:
+    put clientfile1
+server: opened file for writing
+sending total file length: 14 bytes
+wrote n=14 bytes to client, remaining length=0
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : rm clientfile1
+client: wrote n=256 bytes:
+    rm clientfile1
+	Server Response:
+
+Successfully removed filed [ clientfile1 ].
+
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : mkdir directory
+client: wrote n=256 bytes:
+    mkdir directory
+	Server Response:
+
+Created directory [ directory ].
+
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : ls
+client: wrote n=256 bytes:
+    ls
+	Server Response:
+
+Permissions Links Group Owner Size Date Name
+dxwrxwrxw 1 1000 1000 4096 Thu Mar  5 23:55:12 2020 .
+dxwrxwrxw 1 1000 1000 4096 Thu Mar  5 23:55:12 2020 ..
+dxwrxwrxw 1 1000 1000 4096 Thu Mar  5 23:55:12 2020 directory
+-xwrxwrxw 1 1000 1000 23120 Thu Mar  5 23:45:11 2020 server.bin
+-xwrxwrxw 1 1000 1000 20 Thu Mar  5 23:54:17 2020 serverfile1
+-xwrxwrxw 1 1000 1000 64 Thu Mar  5 23:47:44 2020 serverfile2
+
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : cd directory
+client: wrote n=256 bytes:
+    cd directory
+	Server Response:
+
+
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : pwd
+client: wrote n=256 bytes:
+    pwd
+	Server Response:
+
+/directory
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : cd ../
+client: wrote n=256 bytes:
+    cd ../
+	Server Response:
+
+
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : pwd
+client: wrote n=256 bytes:
+    pwd
+	Server Response:
+
+/
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : rmdir directory
+client: wrote n=256 bytes:
+    rmdir directory
+	Server Response:
+
+Successfully removed directory [ directory ].
+
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : lls
+dxwrxwrxw 1 1000 1000 4096 Thu Mar  5 15:54:33 2020 .
+dxwrxwrxw 1 1000 1000 4096 Thu Mar  5 15:48:09 2020 ..
+-xwrxwrxw 1 1000 1000 22744 Thu Mar  5 15:45:31 2020 client.bin
+-xwrxwrxw 1 1000 1000 14 Thu Mar  5 15:20:02 2020 clientfile1
+-xwrxwrxw 1 1000 1000 8192 Thu Mar  5 15:54:51 2020 output.txt
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : ls
+client: wrote n=256 bytes:
+    ls
+	Server Response:
+
+Permissions Links Group Owner Size Date Name
+dxwrxwrxw 1 1000 1000 4096 Thu Mar  5 23:55:48 2020 .
+dxwrxwrxw 1 1000 1000 4096 Thu Mar  5 23:55:48 2020 ..
+-xwrxwrxw 1 1000 1000 23120 Thu Mar  5 23:45:11 2020 server.bin
+-xwrxwrxw 1 1000 1000 20 Thu Mar  5 23:54:17 2020 serverfile1
+-xwrxwrxw 1 1000 1000 64 Thu Mar  5 23:47:44 2020 serverfile2
+
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : WOOOOOT
+client: wrote n=256 bytes:
+    WOOOOOT
+server:
+    server: command not found
+
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : ^C
