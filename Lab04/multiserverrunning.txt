@@ -1,0 +1,30 @@
+$ sudo ./server.bin
+[sudo] password for kiah:
+Initializing server
+Server host info:
+    hostname=localhost
+    IP=127.0.0.1
+Creating socket
+Assigning name to socket
+Getting port number from kernel
+    port=58425
+Server Initialized
+server: changed root to current directory
+server: released root privileges
+server: accepting new connections . . .
+server: accepted a client:
+    IP=127.0.0.1  port=58431
+in parent process
+server: waiting for request from client . . .
+server: accepting new connections . . .
+server: accepted a client:
+    IP=127.0.0.1  port=58432
+in parent process
+server: waiting for request from client . . .
+server: accepting new connections . . .
+server: read n=256 bytes:
+    quit
+server: client quit program
+server: read n=256 bytes:
+    quit
+server: client quit program

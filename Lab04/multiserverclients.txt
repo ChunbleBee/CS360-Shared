@@ -1,0 +1,23 @@
+$ ./client.bin localhost 58425
+Initializing client
+Creating TCP socket
+Connecting to server
+connected to
+    hostname=localhost IP=127.0.0.1 port=58425
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : quit
+
+
+
+
+
+$ ./client.bin localhost 58425
+Initializing client
+Creating TCP socket
+Connecting to server
+connected to
+    hostname=localhost IP=127.0.0.1 port=58425
+| get  put  cat  ls  cd  pwd  mkdir  rmdir  rm |
+|          lcat lls lcd lpwd lmkdir lrmdir lrm |
+input a line : quit
