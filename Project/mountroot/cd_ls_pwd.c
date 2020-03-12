@@ -86,9 +86,13 @@ void recursivePWD(MINODE *curNode) {
         printf("/");
     } else {
         int parentINode = findino(curNode, curNode->INODE.i_block[0]);
-        MINODE parent = iget(dev, parentINode);
+        printf("\tWe got an inode: %d\n", parentINode);
+        getchar();
+        MINODE * parent = iget(dev, parentINode);
+        printf("\tWe got an parent minode, theorhetically\n");
+        getchar();
 
-        printf("/%s", childNode.name);
+        printf("/%s", "GETTHATNODE");
         recursivePWD(parent);
     }
 }
