@@ -2,7 +2,7 @@
 
 int chdir(char *pathname) {
     printf("chdir %s\n", pathname);
-    printf("under construction READ textbook HOW TO chdir!!!!\n");
+    // printf("under construction READ textbook HOW TO chdir!!!!\n");
     // READ Chapter 11.7.3 HOW TO chdir
     int inode = getino(pathname);
 
@@ -62,8 +62,11 @@ int ls_dir(MINODE *mip)
 int ls(char *pathname)
 {
   printf("ls %s\n", pathname);
-  printf("ls CWD only! YOU do it for ANY pathname\n");
-  ls_dir(running->cwd);
+  //printf("ls CWD only! YOU do it for ANY pathname\n");
+  if (pathname[0] != '\0')
+    ls_dir(iget(dev, getino(pathname)));
+  else
+    ls_dir(running->cwd);
 }
 
 /*************** Algorithm of pwd ***************
