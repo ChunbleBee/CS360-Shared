@@ -18,8 +18,19 @@ int chdir(char *pathname) {
 
 int ls_file(MINODE *mip, char *name)
 {
-  printf("ls_file: to be done: READ textbook for HOW TO!!!!\n");
+  // printf("ls_file: to be done: READ textbook for HOW TO!!!!\n");
   // READ Chapter 11.7.3 HOW TO ls
+  char type, perm[10] = "wrxwrxwrx";
+  __u16 mode = mip->INODE.i_mode;
+  if (S_ISDIR(mode)) type = 'd'; else type = '-';
+  for (int i = 0; i < 9; i++) if (!(mode & (1 << i))) perm[i] = '-';
+  __u16 links = mip->INODE.i_links_count;
+  __u16 owner = mip->INODE.i_uid;
+  __u16 group = mip->INODE.i_gid;
+  time_t date = mip->INODE.i_mtime;
+  __u32 size = mip->INODE.i_size;
+  printf("%c%s% 4d% 4d% 4d  %.20s % 8d    %s\n",
+    type, perm, links, owner, group, ctime(&date)+4, size, name);
 }
 
 int ls_dir(MINODE *mip)
@@ -38,9 +49,10 @@ int ls_dir(MINODE *mip)
   while (cp < buf + BLKSIZE){
      strncpy(temp, dp->name, dp->name_len);
      temp[dp->name_len] = 0;
-
-     printf("[%d %s]  ", dp->inode, temp); // print [inode name]
-
+	
+     // printf("[%d %s]  ", dp->inode, temp); // print [inode# name]
+     ls_file(iget(dev, dp->inode), temp);
+	 
      cp += dp->rec_len;
      dp = (DIR *)cp;
   }
@@ -75,7 +87,7 @@ void recursivePWD(MINODE *curNode) {
     } else {
         int parentINode = findino(curNode, curNode->INODE.i_block[0]);
         MINODE parent = iget(dev, parentINode);
-        
+
         printf("/%s", childNode.name);
         recursivePWD(parent);
     }
