@@ -35,7 +35,7 @@ int ls_file(MINODE *mip, char *name)
 
 int ls_dir(MINODE *mip)
 {
-  printf("ls_dir: list CWD's file names; YOU do it for ls -l\n");
+  // printf("ls_dir: list CWD's file names; YOU do it for ls -l\n");
 
   char buf[BLKSIZE], temp[256];
   DIR *dp;
@@ -63,9 +63,14 @@ int ls(char *pathname)
 {
   printf("ls %s\n", pathname);
   //printf("ls CWD only! YOU do it for ANY pathname\n");
-  if (pathname[0] != '\0')
-    ls_dir(iget(dev, getino(pathname)));
-  else
+  if (pathname[0] != '\0') {
+    MINODE * min = iget(dev, getino(pathname));
+    if (S_ISDIR(min->INODE.i_mode)) {
+      ls_dir(min);
+      iput(min);
+    } else
+      printf("Failure: [ %s ] Not a directory!\n", pathname);
+  } else
     ls_dir(running->cwd);
 }
 
