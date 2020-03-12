@@ -20,8 +20,8 @@ int ls_file(MINODE *mip, char *name)
   __u16 group = mip->INODE.i_gid;
   time_t date = mip->INODE.i_mtime;
   __u32 size = mip->INODE.i_size;
-  printf("%c%s \t%d \t%d \t%d \t%s \t% 8d \t%s\n",
-    type, perm, links, owner, group, ctime(date), size, name);
+  printf("%c%s% 4d% 4d% 4d  %.20s % 8d    %s\n",
+    type, perm, links, owner, group, ctime(&date)+4, size, name);
 }
 
 int ls_dir(MINODE *mip)
