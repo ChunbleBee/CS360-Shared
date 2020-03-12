@@ -1,0 +1,13 @@
+
+Download the .tgz files
+
+RUN 
+   zcat mountroot.tgz | tar xvf -
+
+to extract files.
+
+1. mkdisk : make a virtual disk with DIRs and FILEs
+
+2. mk     : gcc main.c
+
+3. Write YOUR OWN chdir(), ls(), pwd() in the cd_ls_pwd.c file
