@@ -21,27 +21,27 @@ DIR   *dp;
 #define NFD        16
 #define NPROC       2
 
-typedef struct minode{
+typedef struct minode {
   INODE INODE;
   int dev, ino;
   int refCount;
   int dirty;
   int mounted;
   struct mntable *mptr;
-}MINODE;
+} MINODE;
 
-typedef struct oft{
+typedef struct oft {
   int  mode;
   int  refCount;
   MINODE *mptr;
   int  offset;
-}OFT;
+} OFT;
 
-typedef struct proc{
+typedef struct proc {
   struct proc *next;
   int          pid;
   int          status;
   int          uid, gid;
   MINODE      *cwd;
   OFT         *fd[NFD];
-}PROC;
+} PROC;
