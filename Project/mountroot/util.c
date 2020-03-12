@@ -4,7 +4,7 @@ int get_block(int dev, int blk, char *buf)
 {
    lseek(dev, (long)blk*BLKSIZE, 0);
    read(dev, buf, BLKSIZE);
-}   
+}
 int put_block(int dev, int blk, char *buf)
 {
    lseek(dev, (long)blk*BLKSIZE, 0);
@@ -169,15 +169,23 @@ int getino(char *pathname)
    return ino;
 }
 
-int findmyname(MINODE *parent, u32 myino, char *myname) 
-{
-  // WRITE YOUR code here:
-  // search parent's data block for myino;
-  // copy its name STRING to myname[ ];
-}
+/***************** WE WROTE THIS ****************/
+int findmyname(MINODE *parent, u32 myino, char *myname) {
+   char buffer[BLKSIZE], * current = buffer;
+   DIR * dirPtr = (DIR *) current;
 
-int findino(MINODE *mip, u32 *myino) // myino = ino of . return ino of ..
-{
+   get_block(parent->dev, parent->INODE.i_block[0], buffer);
+
+   while(myino != dirPtr->inode) {
+      current += dirPtr->rec_len;
+      dirPtr = (DIR *) current;
+   }
+   strcpy(myname, dirPtr->name);
+}
+/***********************************************/
+
+int findino(MINODE *mip, u32 *myino) {
+   // myino = ino of . return ino of ..
   char buf[BLKSIZE], *cp;   
   DIR *dp;
 

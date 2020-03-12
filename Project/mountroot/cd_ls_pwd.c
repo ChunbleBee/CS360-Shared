@@ -76,23 +76,24 @@ int ls(char *pathname)
  *      // recursive call rpwd( pip) with parent minode
  */
 
-char *pwd(MINODE *wd){
-    recursivePWD(wd);
-    printf("\n");
-}
-
 void recursivePWD(MINODE *curNode) {
     if (curNode == root) {
         printf("/");
     } else {
-        int parentINode = findino(curNode, curNode->INODE.i_block[0]);
-        printf("\tWe got an inode: %d\n", parentINode);
-        getchar();
+        int myINode = 0;
+        int parentINode = findino(curNode, &myINode);
         MINODE * parent = iget(dev, parentINode);
-        printf("\tWe got an parent minode, theorhetically\n");
-        getchar();
-
-        printf("/%s", "GETTHATNODE");
+        char curName[255];
+        findmyname(parent, myINode, curName);
         recursivePWD(parent);
+        iput(parent);
+        //getchar();
+        printf("/");
+        printf(curName);
     }
+}
+
+void pwd(MINODE *wd){
+    recursivePWD(wd);
+    printf("\n");
 }
