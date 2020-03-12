@@ -181,6 +181,7 @@ int findmyname(MINODE *parent, u32 myino, char *myname) {
       dirPtr = (DIR *) current;
    }
    strcpy(myname, dirPtr->name);
+   //printf("\n%s\n", myname); //TODO-rm
 }
 /***********************************************/
 

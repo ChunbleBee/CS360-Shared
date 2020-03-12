@@ -85,9 +85,7 @@ int ls(char *pathname)
  */
 
 void recursivePWD(MINODE *curNode) {
-    if (curNode == root) {
-        printf("/");
-    } else {
+    if (curNode != root) {
         int myINode = 0;
         int parentINode = findino(curNode, &myINode);
         MINODE * parent = iget(dev, parentINode);
@@ -95,13 +93,16 @@ void recursivePWD(MINODE *curNode) {
         findmyname(parent, myINode, curName);
         recursivePWD(parent);
         iput(parent);
-        //getchar();
-        printf("/");
-        printf(curName);
+        for (int i = 0; curName[i]; i++)
+            if (curName[i] == '\r') // that took way too long to find...
+                curName[i] = '\0';
+        printf("/%s", curName);
     }
 }
 
 void pwd(MINODE *wd){
+    printf("CWD = ");
+    if (wd == root) printf("/");
     recursivePWD(wd);
     printf("\n");
 }
