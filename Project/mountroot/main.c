@@ -61,6 +61,18 @@ int mount_root()
   root = iget(dev, 2);
 }
 
+int quit()
+{
+  int i;
+  MINODE *mip;
+  for (i=0; i<NMINODE; i++){
+    mip = &minode[i];
+    if (mip->refCount > 0)
+      iput(mip);
+  }
+  exit(0);
+}
+
 char *disk = "diskimage";
 int main(int argc, char *argv[ ])
 {
@@ -120,25 +132,13 @@ int main(int argc, char *argv[ ])
     sscanf(line, "%s %s", cmd, pathname);
     printf("cmd=%s pathname=%s\n", cmd, pathname);
   
-    if (strcmp(cmd, "ls")==0)
+    if (strcmp(cmd, "ls") == 0)
        ls(pathname);
-    else if (strcmp(cmd, "cd")==0)
+    else if (strcmp(cmd, "cd") == 0)
        chdir(pathname);
-    else if (strcmp(cmd, "pwd")==0)
+    else if (strcmp(cmd, "pwd") == 0)
        pwd(running->cwd);
-    else if (strcmp(cmd, "quit")==0)
+    else if (strcmp(cmd, "quit") == 0)
        quit();
   }
-}
-
-int quit()
-{
-  int i;
-  MINODE *mip;
-  for (i=0; i<NMINODE; i++){
-    mip = &minode[i];
-    if (mip->refCount > 0)
-      iput(mip);
-  }
-  exit(0);
 }
