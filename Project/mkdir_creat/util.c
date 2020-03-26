@@ -200,7 +200,7 @@ int findino(MINODE *mip, u32 *myino) {
 }
 
 /************** WE ADDED BITMAP FUNCTIONS ******************/
-// two byte bit label example: 76543210FEDCBA98
+
 int tst_bit(char *buf, int bit) {
    int bytenumber = bit / 8;
    int bitnumber  = bit % 8;
@@ -220,4 +220,38 @@ int clr_bit(char *buf, int bit) {
    int bytenumber = bit / 8;
    int bitnumber  = bit % 8;
    buf[bytenumber] &= ~(1 << bitnumber);
+}
+
+/************** ALLOCATION FUNCTIONS **********************/
+
+
+int ialloc(int dev)  // allocate an inode number from inode_bitmap
+{
+  int  i;
+  char buf[BLKSIZE];
+
+// read inode_bitmap block
+  get_block(dev, imap, buf);
+
+  for (i=0; i < ninodes; i++){
+    if (tst_bit(buf, i)==0){
+        set_bit(buf, i);
+        put_block(dev, imap, buf);
+        printf("allocated ino = %d\n", i+1); // bits count from 0; ino from 1
+        return i+1;
+    }
+  }
+  return 0;
+}
+
+int balloc(dev) {
+   char buf[BLKSIZE];
+
+   get_block(dev, bmap, buf);
+
+   for (int i = 0; i < ninodes; i++) {
+      if (sts_bit(buf, i) == 0) {
+         set_bit(buf, i)
+      }
+   }
 }
