@@ -198,3 +198,26 @@ int findino(MINODE *mip, u32 *myino) {
   dp = (DIR *)cp;
   return dp->inode;
 }
+
+/************** WE ADDED BITMAP FUNCTIONS ******************/
+// two byte bit label example: 76543210FEDCBA98
+int tst_bit(char *buf, int bit) {
+   int bytenumber = bit / 8;
+   int bitnumber  = bit % 8;
+   if (buf[bytenumber] & (1 << bitnumber))
+      return 1;
+   else
+      return 0;   
+}
+
+int set_bit(char *buf, int bit) {
+   int bytenumber = bit / 8;
+   int bitnumber  = bit % 8;
+   buf[bytenumber] |= (1 << bitnumber);
+}
+
+int clr_bit(char *buf, int bit) {
+   int bytenumber = bit / 8;
+   int bitnumber  = bit % 8;
+   buf[bytenumber] &= ~(1 << bitnumber);
+}
