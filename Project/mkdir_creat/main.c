@@ -12,23 +12,11 @@
 #include <stddef.h>
 
 #include "type.h"
+#include "globals.h"
 #include "util.c"
 #include "cd_ls_pwd.c"
 #include "mkdir.c"
 
-
-// global variables
-MINODE minode[NMINODE];
-MINODE *root;
-
-PROC   proc[NPROC], *running;
-
-char gpath[128]; // global for tokenized components
-char *name[32];  // assume at most 32 components in pathname
-int   n;         // number of component strings
-
-int fd, dev;
-int nblocks, ninodes, bmap, imap, inode_start; // disk parameters
 int init()
 {
   int i, j;
@@ -142,6 +130,6 @@ int main(int argc, char *argv[ ])
     else if (strcmp(cmd, "quit") == 0)
       quit();
     else if (strcmp(cmd, "mkdir") == 0)
-      mkdir(pathname);
+      makedir(pathname);
   }
 }
