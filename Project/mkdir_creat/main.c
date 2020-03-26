@@ -9,8 +9,13 @@
 #include <libgen.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <stddef.h>
 
 #include "type.h"
+#include "util.c"
+#include "cd_ls_pwd.c"
+#include "mkdir.c"
+
 
 // global variables
 MINODE minode[NMINODE];
@@ -24,10 +29,6 @@ int   n;         // number of component strings
 
 int fd, dev;
 int nblocks, ninodes, bmap, imap, inode_start; // disk parameters
-
-#include "util.c"
-#include "cd_ls_pwd.c"
-
 int init()
 {
   int i, j;
@@ -133,12 +134,14 @@ int main(int argc, char *argv[ ])
     printf("cmd=%s pathname=%s\n", cmd, pathname);
   
     if (strcmp(cmd, "ls") == 0)
-       ls(pathname);
+      ls(pathname);
     else if (strcmp(cmd, "cd") == 0)
-       chdir(pathname);
+      chdir(pathname);
     else if (strcmp(cmd, "pwd") == 0)
-       pwd(running->cwd);
+      pwd(running->cwd);
     else if (strcmp(cmd, "quit") == 0)
-       quit();
+      quit();
+    else if (strcmp(cmd, "mkdir") == 0)
+      mkdir(pathname);
   }
 }
