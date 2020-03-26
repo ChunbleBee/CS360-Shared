@@ -12,10 +12,6 @@
 #include <stddef.h>
 
 #include "type.h"
-#include "util.c"
-#include "cd_ls_pwd.c"
-#include "mkdir.c"
-
 
 // global variables
 MINODE minode[NMINODE];
@@ -29,6 +25,13 @@ int   n;         // number of component strings
 
 int fd, dev;
 int nblocks, ninodes, bmap, imap, inode_start; // disk parameters
+
+
+/**********************/
+#include "util.c"
+#include "cd_ls_pwd.c"
+#include "mkdir.c"
+
 int init()
 {
   int i, j;
@@ -142,6 +145,6 @@ int main(int argc, char *argv[ ])
     else if (strcmp(cmd, "quit") == 0)
       quit();
     else if (strcmp(cmd, "mkdir") == 0)
-      mkdir(pathname);
+      makedir(pathname);
   }
 }

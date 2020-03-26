@@ -14,7 +14,7 @@ int makedir(char * path) {
     char * parentPath = dirname(path2);
 
     int parentInodeNum = getino(parentPath);
-    MINODE * parentInode = iget(parentPath);
+    MINODE * parentInode = iget(dev, parentPath);
 
     /* TODO: Verify parent is directory,
      * and child doesn't exist in the directory. */
@@ -28,10 +28,10 @@ int makeDirectory(MINODE * parentInode, char * childName) {
     MINODE * mounted;
     int allocatedInode = ialloc(dev);
     int allocatedBlocks = balloc(dev);
-    printf("Inode: %d Bitmap: %d\n", allocatedInode, allocatedBitmap);
+    printf("Inode: %d Bitmap: %d\n", allocatedInode, allocatedBlocks);
 
     mounted = iget(dev, allocatedInode);
-    pInode = mounted->INODE;
+    INODE * pInode = &(mounted->INODE);
 
     pInode->i_mode = 040755;
     pInode->i_uid  = running->uid;
