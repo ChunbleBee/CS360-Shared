@@ -245,13 +245,17 @@ int ialloc(int dev)  // allocate an inode number from inode_bitmap
 }
 
 int balloc(dev) {
+   u32 total_blocks = sp->s_blocks_count;
    char buf[BLKSIZE];
-
    get_block(dev, bmap, buf);
-
-   for (int i = 0; i < ninodes; i++) {
-      if (sts_bit(buf, i) == 0) {
-         set_bit(buf, i)
+   for (int i=0; i < total_blocks; i++) {
+      if (tst_bit(buf, i) == 0) {
+         set_bit(buf, i);
+         put_block(dev, bmap, buf);
+         sp->s_free_blocks_count--;
+         gp->bg_free_blocks_count--;
+         return i+1;
       }
    }
+   return 0;
 }
