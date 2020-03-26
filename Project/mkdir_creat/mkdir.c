@@ -1,4 +1,4 @@
-int makedir(char * path) {
+int testMakeDirectory(char * path) {
     MINODE * start = NULL;
     if (path[1] == ".") {
         start = running->cwd;
@@ -27,8 +27,8 @@ int makedir(char * path) {
 int makeDirectory(MINODE * parentInode, char * childName) {
     MINODE * mounted;
     int allocatedInode = ialloc(dev);
-    int allocatedBlocks = balloc(dev);
-    printf("Inode: %d Bitmap: %d\n", allocatedInode, allocatedBlocks);
+    int allocatedBlock = balloc(dev);
+    printf("Inode: %d Bitmap: %d\n", allocatedInode, allocatedBlock;
 
     mounted = iget(dev, allocatedInode);
     INODE * pInode = &(mounted->INODE);
@@ -43,12 +43,12 @@ int makeDirectory(MINODE * parentInode, char * childName) {
     pInode->i_mtime = pInode->i_atime;
 
     pInode->i_blocks = 2;
-    pInode->i_block[0] = allocatedBlocks;             // new DIR has one data block   
+    pInode->i_block[0] = allocatedBlock;             // new DIR has one data block   
     for (int i = 1; i < 14; i++) {
         pInode->i_block[i] = 0; 
     }
 
     mounted->dirty = 1;               // mark minode dirty
     iput(mounted);                    // write INODE to disk
-    
+    DIR this;
 }
