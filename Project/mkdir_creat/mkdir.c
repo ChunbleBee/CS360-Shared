@@ -1,11 +1,11 @@
-int testMakeDirectory(char * path) {
+int tryMakeDirectory(char * path) {
     MINODE * start = NULL;
-    if (path[1] == ".") {
-        start = running->cwd;
-        dev = running->cwd->dev;
-    } else {
+    if (path[0] == '/') {
         start = root;
         dev = root->dev;
+    } else {
+        start = running->cwd;
+        dev = running->cwd->dev;
     }
 
     char * path2 = strdup(path);
@@ -14,14 +14,24 @@ int testMakeDirectory(char * path) {
     char * parentPath = dirname(path2);
 
     int parentInodeNum = getino(parentPath);
-    MINODE * parentInode = iget(dev, parentPath);
+    MINODE * parentMInode = iget(dev, parentInodeNum);
 
-    /* TODO: Verify parent is directory,
-     * and child doesn't exist in the directory. */
-
-    makeDirectory(parentInode, childName);
-    iput(parentInode);
-    free(path2);
+    if (S_ISDIR(parentMInode->INODE.i_mode)) {
+        if (search(parentMInode, childName) == 0) {
+            makeDirectory(parentMInode, childName);
+            iput(parentMInode);
+            free(path2);
+            return 1;
+        } else {
+            printf("%s already exists in %s\n", childName, parentPath);
+            free(path2);
+            return 0;
+        }
+    } else {
+        printf("%s is not a directory\n", parentPath);
+        free(path2);
+        return 0;
+    }
 }
 
 int makeDirectory(MINODE * parentInode, char * childName) {

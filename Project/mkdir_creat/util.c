@@ -96,6 +96,12 @@ void iput(MINODE *mip)
 
   Write YOUR code here to write INODE back to disk
  ********************************************************/
+   block  = (mip->ino - 1) / 8 + inode_start;
+   offset = (mip->ino - 1) % 8;
+   get_block(mip->dev, block, buf);
+   ip = (INODE *)buf + offset;
+   *ip = mip->INODE;
+   put_block(mip->dev, block, buf);
 } 
 
 int search(MINODE *mip, char *name)
