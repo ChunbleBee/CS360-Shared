@@ -19,7 +19,7 @@ int tryCreat(char * path) {
     MINODE * parentMInode = iget(dev, parentInodeNum);
 
     if (S_ISDIR(parentMInode->INODE.i_mode)) {
-        if (search(parentMInode, childNmae) == 0) {
+        if (search(parentMInode, childName) == 0) {
             creatFile(parentMInode, childName);
             iput(parentMInode);
             free(path2);

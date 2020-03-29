@@ -104,4 +104,5 @@ void pwd(MINODE *wd){
     printf("CWD = ");
     if (wd == root) printf("/");
     recursivePWD(wd);
+    printf("\n");
 }

@@ -1,11 +1,14 @@
 int makeDirectory(MINODE * parentInode, char * childName);
+int enter_name(MINODE * parentInode, int childInodeNum, char * childName);
 
 int tryMakeDirectory(char * path) {
     MINODE * start = NULL;
     if (path[0] == '/') {
+        printf("Starting at the root!\n");
         start = root;
         dev = root->dev;
     } else {
+        printf("Starting at the local directory!\n");
         start = running->cwd;
         dev = running->cwd->dev;
     }
@@ -14,15 +17,22 @@ int tryMakeDirectory(char * path) {
 
     char * childName = basename(path);
     char * parentPath = dirname(path2);
-
+    printf("Parent Path: %s\nNew directory name: %s\n", parentPath, childName);
+    printf("Finding parent inode value...\n");
+    getchar();
     int parentInodeNum = getino(parentPath);
+    printf("Found! %d\nMounting parent inode...\n");
+    getchar();
     MINODE * parentMInode = iget(dev, parentInodeNum);
-
+    printf("Mounted!\nTesting for directory and availability...\n");
+    getchar();
     if (S_ISDIR(parentMInode->INODE.i_mode)) {
         if (search(parentMInode, childName) == 0) {
+            printf("Found directory, and name available.\n");
+            getchar();
             makeDirectory(parentMInode, childName);
             parentMInode->refCount++;
-            parentMInode->dirty = true;
+            parentMInode->dirty = 1;
             iput(parentMInode);
             free(path2);
             return 1;
