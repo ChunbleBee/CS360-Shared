@@ -1,3 +1,5 @@
+int makeDirectory(MINODE * parentInode, char * childName);
+
 int tryMakeDirectory(char * path) {
     MINODE * start = NULL;
     if (path[0] == '/') {
@@ -35,10 +37,11 @@ int tryMakeDirectory(char * path) {
 }
 
 int makeDirectory(MINODE * parentInode, char * childName) {
+    // fix pino->dev all over
     MINODE * mounted;
     int allocatedInode = ialloc(dev);
     int allocatedBlock = balloc(dev);
-    printf("Inode: %d Bitmap: %d\n", allocatedInode, allocatedBlock);
+    printf("NOT DARK: Inode: %d Bitmap: %d\n", allocatedInode, allocatedBlock);
 
     mounted = iget(dev, allocatedInode);
     INODE * pInode = &(mounted->INODE);
@@ -68,7 +71,7 @@ int makeDirectory(MINODE * parentInode, char * childName) {
     char name []
     */
     //u32 next = sizeof(this)/sizeof(char);
-    typedef struct bufferValues __attribute__((__packed__)){
+    typedef struct __attribute__((__packed__)) bufferValues{
         u32 childInode;
         u16 childRecLen;
         u8 childNameLen;
@@ -110,7 +113,7 @@ int enter_name(MINODE * parentInode, int childInodeNum, char * childName) {
         char * cp = buffer;
         dp = (DIR *) cp;
 
-        printf("Stepping to last entry in data block...\n")
+        printf("Stepping to last entry in data block...\n");
         while(cp + dp->rec_len < buffer + BLKSIZE) {
             cp += dp->rec_len;
             dp = (DIR *) cp;
@@ -119,11 +122,9 @@ int enter_name(MINODE * parentInode, int childInodeNum, char * childName) {
         u32 new_ideal_length = 4*((11 + dp->name_len)/4);
         u32 remaining_length = dp->rec_len - new_ideal_length;
         if (remaining_length >= needed_length) {
-            /* TODO: push new directory information into the buffer, then push to the block. */
+            // TODO: push new directory information into the buffer, then push to the block.
             put_block(parentInode->dev, parentInode->INODE->i_block[i], buffer);
             return;
         }
     }
-
-    
 }
