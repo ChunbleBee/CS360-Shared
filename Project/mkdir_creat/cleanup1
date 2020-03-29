@@ -1,3 +1,0 @@
-rm file1 file2
-rmdir dir1/dir3
-rmdir dir1 dir2
