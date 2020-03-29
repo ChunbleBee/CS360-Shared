@@ -120,7 +120,7 @@ int search(MINODE *mip, char *name)
    cp = sbuf;
    printf("  ino   rlen  nlen  name\n");
 
-   while (cp < sbuf + BLKSIZE){
+   while (cp - sbuf < BLKSIZE) {
      strncpy(temp, dp->name, dp->name_len);
      temp[dp->name_len] = 0;
      printf("%4d  %4d  %4d    %s\n", 
@@ -143,11 +143,11 @@ int getino(char *pathname)
   MINODE *mip;
 
   printf("getino: pathname=%s\n", pathname);
-  if (strcmp(pathname, "/")==0)
+  if (strcmp(pathname, "/") == 0)
       return 2;
   
   // starting mip = root OR CWD
-  if (pathname[0]=='/')
+  if (pathname[0] == '/')
      mip = root;
   else
      mip = running->cwd;

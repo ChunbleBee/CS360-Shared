@@ -63,7 +63,7 @@ int quit()
   exit(0);
 }
 
-char *disk = "diskimage";
+char *disk = "mydisk";
 int main(int argc, char *argv[ ])
 {
   int ino;
@@ -131,8 +131,12 @@ int main(int argc, char *argv[ ])
     else if (strcmp(cmd, "quit") == 0)
       quit();
     else if (strcmp(cmd, "mkdir") == 0) {
-      if (tryMakeDirectory(pathname) == 0) {
-        printf("mkdir %s failed\n", pathname);
+      if (strcmp(pathname, "") != 0) {
+        if (tryMakeDirectory(pathname) == 0) {
+          printf("mkdir %s failed\n", pathname);
+        }
+      } else {
+        printf("Error: No path specified!\n");
       }
     }
     else if (strcmp(cmd, "creat") == 0) {
