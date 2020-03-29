@@ -17,6 +17,7 @@ int tryMakeDirectory(char * path) {
 
     char * childName = basename(path);
     char * parentPath = dirname(path2);
+    if (strcmp(parentPath, "") == 0) parentPath = ".";
     printf("Parent Path: %s\nNew directory name: %s\n", parentPath, childName);
     printf("Finding parent inode value...\n");
     getchar();
@@ -51,11 +52,11 @@ int tryMakeDirectory(char * path) {
 int makeDirectory(MINODE * parentInode, char * childName) {
     // fix pino->dev all over
     MINODE * mounted;
-    int allocatedInode = ialloc(dev);
-    int allocatedBlock = balloc(dev);
+    int allocatedInode = ialloc(parentInode->dev);
+    int allocatedBlock = balloc(parentInode->dev);
     printf("NOT DARK: Inode: %d Bitmap: %d\n", allocatedInode, allocatedBlock);
 
-    mounted = iget(dev, allocatedInode);
+    mounted = iget(parentInode->dev, allocatedInode);
     INODE * pInode = &(mounted->INODE);
 
     pInode->i_mode = 040755;
@@ -74,7 +75,6 @@ int makeDirectory(MINODE * parentInode, char * childName) {
     }
 
     mounted->dirty = 1;
-    iput(mounted);
 
     char buffer[BLKSIZE];
     //Child inode information
@@ -95,6 +95,7 @@ int makeDirectory(MINODE * parentInode, char * childName) {
 
     put_block(parentInode->dev, allocatedBlock, buffer);
     enter_name(parentInode, allocatedInode, childName);
+    iput(mounted);
 }
 
 int enter_name(MINODE * parentInode, int childInodeNum, char * childName) {
