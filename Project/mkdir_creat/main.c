@@ -130,12 +130,8 @@ int main(int argc, char *argv[ ])
     else if (strcmp(cmd, "quit") == 0)
       quit();
     else if (strcmp(cmd, "mkdir") == 0)
-<<<<<<< HEAD
       if (tryMakeDirectory(pathname) == 0) {
         printf("mkdir %s failed\n", pathname);
       }
-=======
-      tryMakeDirectory(pathname);
->>>>>>> 6fea6a93aa1d33c235f94f7709e5aebccb134719
   }
 }
