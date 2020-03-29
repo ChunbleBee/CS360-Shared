@@ -75,27 +75,26 @@ MINODE *iget(int dev, int ino)
   return 0;
 }
 
-void iput(MINODE *mip)
-{
- int i, block, offset;
- char buf[BLKSIZE];
- INODE *ip;
+void iput(MINODE *mip) {
+   int i, block, offset;
+   char buf[BLKSIZE];
+   INODE *ip;
 
- mip->refCount--;
- 
- if (mip->refCount > 0)  // minode is still in use
-    return;
- if (!mip->dirty)        // INODE has not changed; no need to write back
-    return;
- 
- /* write INODE back to disk */
- /***** NOTE *******************************************
-  For mountroot, we never MODIFY any loaded INODE
-                 so no need to write it back
-  FOR LATER WROK: MUST write INODE back to disk if refCount==0 && DIRTY
+   mip->refCount--;
 
-  Write YOUR code here to write INODE back to disk
- ********************************************************/
+   if (mip->refCount > 0)  // minode is still in use
+      return;
+   if (!mip->dirty)        // INODE has not changed; no need to write back
+      return;
+
+   /* write INODE back to disk */
+   /***** NOTE *******************************************
+    For mountroot, we never MODIFY any loaded INODE
+                  so no need to write it back
+   FOR LATER WROK: MUST write INODE back to disk if refCount==0 && DIRTY
+
+   Write YOUR code here to write INODE back to disk
+   ********************************************************/
    block  = (mip->ino - 1) / 8 + inode_start;
    offset = (mip->ino - 1) % 8;
    get_block(mip->dev, block, buf);
@@ -104,8 +103,7 @@ void iput(MINODE *mip)
    put_block(mip->dev, block, buf);
 } 
 
-int search(MINODE *mip, char *name)
-{
+int search(MINODE *mip, char *name) {
    char *cp, c, sbuf[BLKSIZE], temp[256];
    DIR *dp;
    INODE *ip;
@@ -121,42 +119,43 @@ int search(MINODE *mip, char *name)
    printf("  ino   rlen  nlen  name\n");
 
    while (cp - sbuf < BLKSIZE) {
-     strncpy(temp, dp->name, dp->name_len);
-     temp[dp->name_len] = 0;
-     printf("%4d  %4d  %4d    %s\n", 
-           dp->inode, dp->rec_len, dp->name_len, temp);
-     if (strcmp(temp, name)==0){
-        printf("found %s : ino = %d\n", temp, dp->inode);
-        return dp->inode;
-     }
-     cp += dp->rec_len;
-     dp = (DIR *)cp;
+      strncpy(temp, dp->name, dp->name_len);
+      temp[dp->name_len] = 0;
+
+      printf("%4d  %4d  %4d    %s\n", 
+            dp->inode, dp->rec_len, dp->name_len, temp);
+      if (strcmp(temp, name) == 0) {
+         printf("found %s : ino = %d\n", temp, dp->inode);
+         return dp->inode;
+      }
+
+      cp += dp->rec_len;
+      dp = (DIR *)cp;
    }
    return 0;
 }
 
-int getino(char *pathname)
-{
-  int i, ino, blk, disp;
-  char buf[BLKSIZE];
-  INODE *ip;
-  MINODE *mip;
+int getino(char *pathname) {
+   int i, ino, blk, disp;
+   char buf[BLKSIZE];
+   INODE *ip;
+   MINODE *mip;
 
-  printf("getino: pathname=%s\n", pathname);
-  if (strcmp(pathname, "/") == 0)
-      return 2;
+   printf("getino: pathname=%s\n", pathname);
+   if (strcmp(pathname, "/") == 0) return 2;
   
-  // starting mip = root OR CWD
-  if (pathname[0] == '/')
-     mip = root;
-  else
-     mip = running->cwd;
+   // starting mip = root OR CWD
+   if (pathname[0] == '/') {
+      mip = root;
+   } else {
+      mip = running->cwd;
+   }
 
-  mip->refCount++;         // because we iput(mip) later
+   mip->refCount++;         // because we iput(mip) later
   
-  tokenize(pathname);
+   tokenize(pathname);
 
-  for (i=0; i<n; i++){
+   for (i=0; i<n; i++){
       printf("===========================================\n");
       printf("getino: i=%d name[%d]=%s\n", i, i, name[i]);
  
@@ -171,7 +170,7 @@ int getino(char *pathname)
       mip = iget(dev, ino);     // get next mip
    }
 
-  iput(mip);                   // release mip  
+   iput(mip);                   // release mip  
    return ino;
 }
 
@@ -193,16 +192,16 @@ int findmyname(MINODE *parent, u32 myino, char *myname) {
 
 int findino(MINODE *mip, u32 *myino) {
    // myino = ino of . return ino of ..
-  char buf[BLKSIZE], *cp;   
-  DIR *dp;
+   char buf[BLKSIZE], *cp;   
+   DIR *dp;
 
-  get_block(mip->dev, mip->INODE.i_block[0], buf);
-  cp = buf; 
-  dp = (DIR *)buf;
-  *myino = dp->inode;
-  cp += dp->rec_len;
-  dp = (DIR *)cp;
-  return dp->inode;
+   get_block(mip->dev, mip->INODE.i_block[0], buf);
+   cp = buf; 
+   dp = (DIR *)buf;
+   *myino = dp->inode;
+   cp += dp->rec_len;
+   dp = (DIR *)cp;
+   return dp->inode;
 }
 
 /************** WE ADDED BITMAP FUNCTIONS ******************/
