@@ -16,6 +16,7 @@
 #include "util.c"
 #include "cd_ls_pwd.c"
 #include "mkdir.c"
+#include "creat.c"
 
 int init()
 {
@@ -129,9 +130,15 @@ int main(int argc, char *argv[ ])
       pwd(running->cwd);
     else if (strcmp(cmd, "quit") == 0)
       quit();
-    else if (strcmp(cmd, "mkdir") == 0)
+    else if (strcmp(cmd, "mkdir") == 0) {
       if (tryMakeDirectory(pathname) == 0) {
         printf("mkdir %s failed\n", pathname);
       }
+    }
+    else if (strcmp(cmd, "creat") == 0) {
+      if (tryCreat(pathname) == 0) {
+        printf("creat %s failed\n", pathname);
+      }
+    }
   }
 }

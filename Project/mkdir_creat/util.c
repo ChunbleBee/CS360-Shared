@@ -244,13 +244,15 @@ int ialloc(int dev)  // allocate an inode number from inode_bitmap
         set_bit(buf, i);
         put_block(dev, imap, buf);
         printf("allocated ino = %d\n", i+1); // bits count from 0; ino from 1
+        sp->s_free_inodes_count--;
+        gp->bg_free_inodes_count--;
         return i+1;
     }
   }
   return 0;
 }
 
-int balloc(dev) {
+int balloc(int dev) {
    u32 total_blocks = sp->s_blocks_count;
    char buf[BLKSIZE];
    get_block(dev, bmap, buf);

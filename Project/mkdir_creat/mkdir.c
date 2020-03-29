@@ -1,3 +1,5 @@
+int makeDirectory(MINODE * parentInode, char * childName);
+
 int tryMakeDirectory(char * path) {
     MINODE * start = NULL;
     if (path[0] == '/') {
@@ -37,10 +39,11 @@ int tryMakeDirectory(char * path) {
 }
 
 int makeDirectory(MINODE * parentInode, char * childName) {
+    // fix pino->dev all over
     MINODE * mounted;
     int allocatedInode = ialloc(dev);
     int allocatedBlock = balloc(dev);
-    printf("Inode: %d Bitmap: %d\n", allocatedInode, allocatedBlock);
+    printf("NOT DARK: Inode: %d Bitmap: %d\n", allocatedInode, allocatedBlock);
 
     mounted = iget(dev, allocatedInode);
     INODE * pInode = &(mounted->INODE);
@@ -99,7 +102,7 @@ int enter_name(MINODE * parentInode, int childInodeNum, char * childName) {
         char * cp = buffer;
         dp = (DIR *) cp;
 
-        printf("Stepping to last entry in data block...\n");;
+        printf("Stepping to last entry in data block...\n");
         while(cp + dp->rec_len < buffer + BLKSIZE) {
             printf("Checking record: %.*s\n", dp->name_len, dp->name);
             cp += dp->rec_len;
