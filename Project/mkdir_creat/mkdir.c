@@ -22,7 +22,7 @@ int tryMakeDirectory(char * path) {
         if (search(parentMInode, childName) == 0) {
             makeDirectory(parentMInode, childName);
             parentMInode->refCount++;
-            parentMInode->dirty = true;
+            parentMInode->dirty = 1;
             iput(parentMInode);
             free(path2);
             return 1;
@@ -57,9 +57,9 @@ int makeDirectory(MINODE * parentInode, char * childName) {
     pInode->i_ctime = pInode->i_atime;
     pInode->i_mtime = pInode->i_atime;
 
-    pInode->i_blocks = (BLKSIZE/512 > 0) ? BLKSIZE/512 : 1;
+    pInode->i_blocks = 2; //(BLKSIZE/512 > 0) ? BLKSIZE/512 : 1;
     pInode->i_block[0] = allocatedBlock;
-    for (int i = 1; i < 14; i++) {
+    for (int i = 1; i <= 14; i++) {
         pInode->i_block[i] = 0; 
     }
 
@@ -89,10 +89,10 @@ int makeDirectory(MINODE * parentInode, char * childName) {
 
 int enter_name(MINODE * parentInode, int childInodeNum, char * childName) {
     char buffer[BLKSIZE];
-    u32 needed_length = 4*((11+strlen(childName))/4);
+    u16 needed_length = 4*((11+strlen(childName))/4);
     int i = 0;
 
-    for(; i < parentInode->INODE.i_blocks; i++) {
+    for(; i < 12; i++) {
         if (parentInode->INODE.i_block[i] == 0) {
             printf("No other entries in data block...\n");
             break;
@@ -119,7 +119,7 @@ int enter_name(MINODE * parentInode, int childInodeNum, char * childName) {
             dp = (DIR *)cp;
             dp->inode = childInodeNum;
             dp->rec_len = remaining_length;
-            dp->name_len = strlen(childName) - 1;
+            dp->name_len = strlen(childName);
             strncpy(&(dp->name), childName, dp->name_len);
             put_block(parentInode->dev, parentInode->INODE.i_block[i], buffer);
             return;
@@ -134,8 +134,9 @@ int enter_name(MINODE * parentInode, int childInodeNum, char * childName) {
 
     dp = (DIR *) buffer;
     dp->inode = childInodeNum;
-    dp->name_len = strlen(childName) - 1;
+    dp->name_len = strlen(childName);
     dp->rec_len = BLKSIZE;
     strncpy(&(dp->name), childName, dp->name_len);
     put_block(parentInode->dev, allocatedBlock, buffer);
+    return;
 }
