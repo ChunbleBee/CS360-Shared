@@ -1,0 +1,331 @@
+
+checking EXT2 FS ....EXT2 FS OK
+bmp=8 imap=9 inode_start = 10
+init()
+mount_root()
+root refCount = 1
+creating P0 as running process
+root refCount = 2
+input command : [ls | cd | pwd | mkdir | quit | creat] pwd
+cmd=pwd pathname=
+CWD = /
+input command : [ls | cd | pwd | mkdir | quit | creat] ls
+cmd=ls pathname=
+ls
+dwrxw-xw-x   3   0   0  Mar 29 18:44:45 2020     1024    .
+dwrxw-xw-x   3   0   0  Mar 29 18:44:45 2020     1024    ..
+dwrx------   2   0   0  Mar 29 18:44:45 2020    12288    lost+found
+
+input command : [ls | cd | pwd | mkdir | quit | creat] mkdir dir1
+cmd=mkdir pathname=dir1
+Starting at the local directory!
+Parent Path: .
+New directory name: dir1
+Finding parent inode value...
+getino: pathname=.
+tokenize .
+.
+===========================================
+getino: i=0 name[0]=.
+search for . in MINODE = [3, 2]
+  ino   rlen  nlen  name
+   2    12     1    .
+found . : ino = 2
+Found! 2
+Mounting parent inode...
+Mounted!
+Testing for directory and availability...
+search for dir1 in MINODE = [3, 2]
+  ino   rlen  nlen  name
+   2    12     1    .
+   2    12     2    ..
+  11  1000    10    lost+found
+Found directory, and name available.
+allocated ino = 12
+NOT DARK: Inode: 12 Block: 47
+Stepping to last entry in data block...
+Checking record: .
+Checking record: ..
+Found last entry: lost+found
+input command : [ls | cd | pwd | mkdir | quit | creat] ls
+cmd=ls pathname=
+ls
+dwrxw-xw-x   4   0   0  Mar 29 18:44:45 2020     1024    .
+dwrxw-xw-x   4   0   0  Mar 29 18:44:45 2020     1024    ..
+dwrx------   2   0   0  Mar 29 18:44:45 2020    12288    lost+found
+dwrxw-xw-x   2   0   0  Mar 29 18:45:07 2020     1024    dir1
+
+input command : [ls | cd | pwd | mkdir | quit | creat] cd dir1
+cmd=cd pathname=dir1
+chdir dir1
+getino: pathname=dir1
+tokenize dir1
+dir1
+===========================================
+getino: i=0 name[0]=dir1
+search for dir1 in MINODE = [3, 2]
+  ino   rlen  nlen  name
+   2    12     1    .
+   2    12     2    ..
+  11    20    10    lost+found
+  12   980     4    dir1
+found dir1 : ino = 12
+input command : [ls | cd | pwd | mkdir | quit | creat] creat file
+cmd=creat pathname=file
+getino: pathname=.
+tokenize .
+.
+===========================================
+getino: i=0 name[0]=.
+search for . in MINODE = [3, 12]
+  ino   rlen  nlen  name
+  12    12     1    .
+found . : ino = 12
+search for file in MINODE = [3, 12]
+  ino   rlen  nlen  name
+  12    12     1    .
+   2  1012     2    ..
+allocated ino = 13
+SPARKLES ARE NOT DARK: Inode: 13
+Stepping to last entry in data block...
+Checking record: .
+Found last entry: ..
+input command : [ls | cd | pwd | mkdir | quit | creat] ls
+cmd=ls pathname=
+ls
+dwrxw-xw-x   2   0   0  Mar 29 18:45:07 2020     1024    .
+dwrxw-xw-x   4   0   0  Mar 29 18:44:45 2020     1024    ..
+-wr-w--w--   1   0   0  Mar 29 18:45:21 2020        0    file
+
+input command : [ls | cd | pwd | mkdir | quit | creat] mkdir dir2
+cmd=mkdir pathname=dir2
+Starting at the local directory!
+Parent Path: .
+New directory name: dir2
+Finding parent inode value...
+getino: pathname=.
+tokenize .
+.
+===========================================
+getino: i=0 name[0]=.
+search for . in MINODE = [3, 12]
+  ino   rlen  nlen  name
+  12    12     1    .
+found . : ino = 12
+Found! 12
+Mounting parent inode...
+Mounted!
+Testing for directory and availability...
+search for dir2 in MINODE = [3, 12]
+  ino   rlen  nlen  name
+  12    12     1    .
+   2    12     2    ..
+  13  1000     4    file
+Found directory, and name available.
+allocated ino = 14
+NOT DARK: Inode: 14 Block: 48
+Stepping to last entry in data block...
+Checking record: .
+Checking record: ..
+Found last entry: file
+input command : [ls | cd | pwd | mkdir | quit | creat] cd dir2
+cmd=cd pathname=dir2
+chdir dir2
+getino: pathname=dir2
+tokenize dir2
+dir2
+===========================================
+getino: i=0 name[0]=dir2
+search for dir2 in MINODE = [3, 12]
+  ino   rlen  nlen  name
+  12    12     1    .
+   2    12     2    ..
+  13    12     4    file
+  14   988     4    dir2
+found dir2 : ino = 14
+input command : [ls | cd | pwd | mkdir | quit | creat] ls
+cmd=ls pathname=
+ls
+dwrxw-xw-x   2   0   0  Mar 29 18:45:35 2020     1024    .
+dwrxw-xw-x   3   0   0  Mar 29 18:45:07 2020     1024    ..
+
+input command : [ls | cd | pwd | mkdir | quit | creat] pwd
+cmd=pwd pathname=
+CWD = /dir1/dir2
+input command : [ls | cd | pwd | mkdir | quit | creat] creat soupfile
+cmd=creat pathname=soupfile
+getino: pathname=.
+tokenize .
+.
+===========================================
+getino: i=0 name[0]=.
+search for . in MINODE = [3, 14]
+  ino   rlen  nlen  name
+  14    12     1    .
+found . : ino = 14
+search for soupfile in MINODE = [3, 14]
+  ino   rlen  nlen  name
+  14    12     1    .
+  12  1012     2    ..
+allocated ino = 15
+SPARKLES ARE NOT DARK: Inode: 15
+Stepping to last entry in data block...
+Checking record: .
+Found last entry: ..
+input command : [ls | cd | pwd | mkdir | quit | creat] ls
+cmd=ls pathname=
+ls
+dwrxw-xw-x   2   0   0  Mar 29 18:45:35 2020     1024    .
+dwrxw-xw-x   3   0   0  Mar 29 18:45:07 2020     1024    ..
+-wr-w--w--   1   0   0  Mar 29 18:45:58 2020        0    soupfile
+
+input command : [ls | cd | pwd | mkdir | quit | creat] cd ..
+cmd=cd pathname=..
+chdir ..
+getino: pathname=..
+tokenize ..
+..
+===========================================
+getino: i=0 name[0]=..
+search for .. in MINODE = [3, 14]
+  ino   rlen  nlen  name
+  14    12     1    .
+  12    12     2    ..
+found .. : ino = 12
+input command : [ls | cd | pwd | mkdir | quit | creat] pwd
+cmd=pwd pathname=
+CWD = /dir1
+input command : [ls | cd | pwd | mkdir | quit | creat] ls
+cmd=ls pathname=
+ls
+dwrxw-xw-x   3   0   0  Mar 29 18:45:07 2020     1024    .
+dwrxw-xw-x   4   0   0  Mar 29 18:44:45 2020     1024    ..
+-wr-w--w--   1   0   0  Mar 29 18:45:21 2020        0    file
+dwrxw-xw-x   2   0   0  Mar 29 18:45:35 2020     1024    dir2
+
+input command : [ls | cd | pwd | mkdir | quit | creat] ls dir2
+cmd=ls pathname=dir2
+ls dir2
+getino: pathname=dir2
+tokenize dir2
+dir2
+===========================================
+getino: i=0 name[0]=dir2
+search for dir2 in MINODE = [3, 12]
+  ino   rlen  nlen  name
+  12    12     1    .
+   2    12     2    ..
+  13    12     4    file
+  14   988     4    dir2
+found dir2 : ino = 14
+dwrxw-xw-x   2   0   0  Mar 29 18:45:35 2020     1024    .
+dwrxw-xw-x   3   0   0  Mar 29 18:45:07 2020     1024    ..
+-wr-w--w--   1   0   0  Mar 29 18:45:58 2020        0    soupfile
+
+input command : [ls | cd | pwd | mkdir | quit | creat] cd ..
+cmd=cd pathname=..
+chdir ..
+getino: pathname=..
+tokenize ..
+..
+===========================================
+getino: i=0 name[0]=..
+search for .. in MINODE = [3, 12]
+  ino   rlen  nlen  name
+  12    12     1    .
+   2    12     2    ..
+found .. : ino = 2
+input command : [ls | cd | pwd | mkdir | quit | creat] pwd
+cmd=pwd pathname=
+CWD = /
+input command : [ls | cd | pwd | mkdir | quit | creat] ls
+cmd=ls pathname=
+ls
+dwrxw-xw-x   4   0   0  Mar 29 18:44:45 2020     1024    .
+dwrxw-xw-x   4   0   0  Mar 29 18:44:45 2020     1024    ..
+dwrx------   2   0   0  Mar 29 18:44:45 2020    12288    lost+found
+dwrxw-xw-x   3   0   0  Mar 29 18:45:07 2020     1024    dir1
+
+input command : [ls | cd | pwd | mkdir | quit | creat] creat filefilefile
+cmd=creat pathname=filefilefile
+getino: pathname=.
+tokenize .
+.
+===========================================
+getino: i=0 name[0]=.
+search for . in MINODE = [3, 2]
+  ino   rlen  nlen  name
+   2    12     1    .
+found . : ino = 2
+search for filefilefile in MINODE = [3, 2]
+  ino   rlen  nlen  name
+   2    12     1    .
+   2    12     2    ..
+  11    20    10    lost+found
+  12   980     4    dir1
+allocated ino = 16
+SPARKLES ARE NOT DARK: Inode: 16
+Stepping to last entry in data block...
+Checking record: .
+Checking record: ..
+Checking record: lost+found
+Found last entry: dir1
+input command : [ls | cd | pwd | mkdir | quit | creat] ls
+cmd=ls pathname=
+ls
+dwrxw-xw-x   4   0   0  Mar 29 18:44:45 2020     1024    .
+dwrxw-xw-x   4   0   0  Mar 29 18:44:45 2020     1024    ..
+dwrx------   2   0   0  Mar 29 18:44:45 2020    12288    lost+found
+dwrxw-xw-x   3   0   0  Mar 29 18:45:07 2020     1024    dir1
+-wr-w--w--   1   0   0  Mar 29 18:46:43 2020        0    filefilefile
+
+input command : [ls | cd | pwd | mkdir | quit | creat] ls dir1
+cmd=ls pathname=dir1
+ls dir1
+getino: pathname=dir1
+tokenize dir1
+dir1
+===========================================
+getino: i=0 name[0]=dir1
+search for dir1 in MINODE = [3, 2]
+  ino   rlen  nlen  name
+   2    12     1    .
+   2    12     2    ..
+  11    20    10    lost+found
+  12    12     4    dir1
+found dir1 : ino = 12
+dwrxw-xw-x   3   0   0  Mar 29 18:45:07 2020     1024    .
+dwrxw-xw-x   4   0   0  Mar 29 18:44:45 2020     1024    ..
+-wr-w--w--   1   0   0  Mar 29 18:45:21 2020        0    file
+dwrxw-xw-x   2   0   0  Mar 29 18:45:35 2020     1024    dir2
+
+input command : [ls | cd | pwd | mkdir | quit | creat] ls dir1/dir2
+cmd=ls pathname=dir1/dir2
+ls dir1/dir2
+getino: pathname=dir1/dir2
+tokenize dir1/dir2
+dir1  dir2
+===========================================
+getino: i=0 name[0]=dir1
+search for dir1 in MINODE = [3, 2]
+  ino   rlen  nlen  name
+   2    12     1    .
+   2    12     2    ..
+  11    20    10    lost+found
+  12    12     4    dir1
+found dir1 : ino = 12
+===========================================
+getino: i=1 name[1]=dir2
+search for dir2 in MINODE = [3, 12]
+  ino   rlen  nlen  name
+  12    12     1    .
+   2    12     2    ..
+  13    12     4    file
+  14   988     4    dir2
+found dir2 : ino = 14
+dwrxw-xw-x   2   0   0  Mar 29 18:45:35 2020     1024    .
+dwrxw-xw-x   3   0   0  Mar 29 18:45:07 2020     1024    ..
+-wr-w--w--   1   0   0  Mar 29 18:45:58 2020        0    soupfile
+
+input command : [ls | cd | pwd | mkdir | quit | creat] quit
+cmd=quit pathname=

@@ -23,7 +23,7 @@ int ls_file(MINODE *mip, char *name)
   char type, perm[10] = "wrxwrxwrx";
   __u16 mode = mip->INODE.i_mode;
   if (S_ISDIR(mode)) type = 'd'; else type = '-';
-  for (int i = 0; i < 9; i++) if (!(mode & (1 << i))) perm[i] = '-';
+  for (int i = 0; i < 9; i++) if (!(mode & (1 << i))) perm[8 - i] = '-';
   __u16 links = mip->INODE.i_links_count;
   __u16 owner = mip->INODE.i_uid;
   __u16 group = mip->INODE.i_gid;
@@ -89,13 +89,10 @@ void recursivePWD(MINODE *curNode) {
         int myINode = 0;
         int parentINode = findino(curNode, &myINode);
         MINODE * parent = iget(dev, parentINode);
-        char curName[255];
+        char curName[256];
         findmyname(parent, myINode, curName);
         recursivePWD(parent);
         iput(parent);
-        for (int i = 0; curName[i]; i++)
-            if (curName[i] == '\r') // that took way too long to find...
-                curName[i] = '\0';
         printf("/%s", curName);
     }
 }

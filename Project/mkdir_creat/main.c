@@ -1,6 +1,4 @@
-/****************************************************************************
-*                   KCW  Implement ext2 file system                         *
-*****************************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -16,7 +14,7 @@
 #include "util.c"
 #include "cd_ls_pwd.c"
 #include "mkdir.c"
-#include "creat.c"
+#include "createfile.c"
 
 int init()
 {
@@ -57,7 +55,7 @@ int quit()
   MINODE *mip;
   for (i=0; i<NMINODE; i++){
     mip = &minode[i];
-    if (mip->refCount > 0)
+    while (mip->refCount > 0)
       iput(mip);
   }
   exit(0);
@@ -67,7 +65,7 @@ char *disk = "diskimage";
 int main(int argc, char *argv[ ])
 {
   int ino;
-  char buf[BLKSIZE];
+  char spbuf[BLKSIZE], gpbuf[BLKSIZE];
   char line[128], cmd[32], pathname[128];
  
   printf("checking EXT2 FS ....");
@@ -78,8 +76,8 @@ int main(int argc, char *argv[ ])
   dev = fd;    // fd is the global dev 
 
   /********** read super block  ****************/
-  get_block(dev, 1, buf);
-  sp = (SUPER *)buf;
+  get_block(dev, 1, spbuf);
+  sp = (SUPER *)spbuf;
 
   /* verify it's an ext2 file system ***********/
   if (sp->s_magic != 0xEF53){
@@ -90,8 +88,8 @@ int main(int argc, char *argv[ ])
   ninodes = sp->s_inodes_count;
   nblocks = sp->s_blocks_count;
 
-  get_block(dev, 2, buf); 
-  gp = (GD *)buf;
+  get_block(dev, 2, gpbuf); 
+  gp = (GD *)gpbuf;
 
   bmap = gp->bg_block_bitmap;
   imap = gp->bg_inode_bitmap;
@@ -111,13 +109,13 @@ int main(int argc, char *argv[ ])
   // WRTIE code here to create P1 as a USER process
   
   while(1){
-    printf("input command : [ls | cd | pwd | mkdir | quit] ");
+    printf("input command : [ls | cd | pwd | mkdir | quit | creat] ");
     fgets(line, 128, stdin);
-    line[strlen(line)-1] = 0;
+    line[strlen(line)-1] = '\0';
 
-    if (line[0] == 0)
+    if (line[0] == '\0')
       continue;
-    pathname[0] = 0;
+    pathname[0] = '\0';
 
     sscanf(line, "%s %s", cmd, pathname);
     printf("cmd=%s pathname=%s\n", cmd, pathname);
@@ -140,7 +138,7 @@ int main(int argc, char *argv[ ])
       }
     }
     else if (strcmp(cmd, "creat") == 0) {
-      if (tryCreat(pathname) == 0) {
+      if (tryCreate(pathname) == 0) {
         printf("creat %s failed\n", pathname);
       }
     }

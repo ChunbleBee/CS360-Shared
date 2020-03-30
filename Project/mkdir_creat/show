@@ -1,3 +1,0 @@
-sudo mount mydisk /mnt
-ls -l /mnt
-sudo umount /mnt

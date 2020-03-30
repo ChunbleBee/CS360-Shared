@@ -77,7 +77,7 @@ MINODE *iget(int dev, int ino)
 
 void iput(MINODE *mip) {
    int i, block, offset;
-   char buf[BLKSIZE];
+   char buffer[BLKSIZE];
    INODE *ip;
 
    mip->refCount--;
@@ -97,10 +97,10 @@ void iput(MINODE *mip) {
    ********************************************************/
    block  = (mip->ino - 1) / 8 + inode_start;
    offset = (mip->ino - 1) % 8;
-   get_block(mip->dev, block, buf);
-   ip = (INODE *)buf + offset;
+   get_block(mip->dev, block, buffer);
+   ip = (INODE *)buffer + offset;
    *ip = mip->INODE;
-   put_block(mip->dev, block, buf);
+   put_block(mip->dev, block, buffer);
 } 
 
 int search(MINODE *mip, char *name) {
@@ -185,7 +185,8 @@ int findmyname(MINODE *parent, u32 myino, char *myname) {
       current += dirPtr->rec_len;
       dirPtr = (DIR *) current;
    }
-   strcpy(myname, dirPtr->name);
+   strncpy(myname, dirPtr->name, dirPtr->name_len);
+   myname[dirPtr->name_len] = '\0';
    //printf("\n%s\n", myname); //TODO-rm
 }
 /***********************************************/
@@ -265,4 +266,59 @@ int balloc(int dev) {
       }
    }
    return 0;
+}
+
+int enter_name(MINODE * parentInode, int childInodeNum, char * childName) {
+    char buffer[BLKSIZE];
+    memset(buffer, '\0', BLKSIZE);
+    u16 needed_length = 4*((11+strlen(childName))/4);
+
+    int i = 0;
+    for(i = 0; i < 12; i++) {
+        if (parentInode->INODE.i_block[i] == 0) {
+            printf("No other entries in data block...\n");
+            break;
+        }
+
+        get_block(parentInode->dev, parentInode->INODE.i_block[i], buffer);
+        char * cp = buffer;
+        dp = (DIR *) cp;
+
+        printf("Stepping to last entry in data block...\n");
+        while(cp + dp->rec_len < buffer + BLKSIZE) {
+            printf("Checking record: %.*s\n", dp->name_len, dp->name);
+            cp += dp->rec_len;
+            dp = (DIR *) cp;
+        }
+
+        printf("Found last entry: %.*s\n", dp->name_len, dp->name);
+        u16 new_ideal_length = 4*((11 + dp->name_len)/4);
+        u16 remaining_length = dp->rec_len - new_ideal_length;
+
+        if (remaining_length >= needed_length) {
+            dp->rec_len = new_ideal_length;
+            cp += dp->rec_len;
+            dp = (DIR *)cp;
+            dp->inode = childInodeNum;
+            dp->rec_len = remaining_length;
+            dp->name_len = strlen(childName);
+            strncpy(dp->name, childName, dp->name_len);
+            put_block(parentInode->dev, parentInode->INODE.i_block[i], buffer);
+            return 0;
+        }
+    }
+    printf("Allocating new data block...\n");
+    //Reach here, no remaining blocks. Increment number of blocks by 1 and allocate a enw data block
+    int allocatedBlock = balloc(parentInode->dev);
+    parentInode->INODE.i_blocks++;
+    parentInode->INODE.i_block[i] = allocatedBlock;
+    parentInode->INODE.i_size += BLKSIZE;
+
+    dp = (DIR *) buffer;
+    dp->inode = childInodeNum;
+    dp->name_len = strlen(childName);
+    dp->rec_len = BLKSIZE;
+    strncpy(dp->name, childName, dp->name_len);
+    put_block(parentInode->dev, allocatedBlock, buffer);
+    return 0;
 }
