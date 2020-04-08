@@ -1,0 +1,2 @@
+int symlink();
+int readlink();

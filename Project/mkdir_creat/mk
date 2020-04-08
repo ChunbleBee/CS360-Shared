@@ -2,5 +2,3 @@
 mkfs diskimage 1440
 gcc main.c
 ./a.out
-
-

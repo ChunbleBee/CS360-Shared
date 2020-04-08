@@ -1,0 +1,2 @@
+int link();
+int unlink();
