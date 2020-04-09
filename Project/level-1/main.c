@@ -160,7 +160,9 @@ int main(int argc, char *argv[ ])
     }
     else if (strcmp(cmd, "rmdir") == 0) {
       if (tryRemoveDirectory(pathname) <= 0) {
-        printf("rmdir %s failed\n");
+        printf("rmdir %s failed\n", pathname);
+      }
+    }
     else if (strcmp(cmd, "link") == 0) {
       if (tryLink(pathname, pathname2) == 0) {
         printf("link %s %s failed\n", pathname, pathname2);

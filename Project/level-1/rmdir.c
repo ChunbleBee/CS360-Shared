@@ -24,12 +24,12 @@ int tryRemoveDirectory(char * path) {
             MINODE * childMInode = iget(dev, childInodeNum);
             
             if (childMInode != NULL) {
-                if (S_ISDIR(childInode->INODE.i_mode)) {
+                if (S_ISDIR(childMInode->INODE.i_mode)) {
                     if (running->uid == 0 ||
                         (running->uid == childMInode->INODE.i_uid &&
                         running->uid == parentMInode->INODE.i_uid)
                     ) {
-                        outcome = removeDirectory(parentMInode, childMInode, char * childName);
+                        outcome = removeDirectory(parentMInode, childMInode, childName);
                     } else {
                         outcome = -2;
                     }
