@@ -83,7 +83,7 @@ int removeDirectory(MINODE * parentMInode, MINODE * childMInode, char * childNam
             }
         }
 
-        freeInodeAndBlocks(childMInode->dev, childMInode->ino);
+        freeInodeAndBlocks(childMInode);
         outcome = (removeChild(parentMInode, childName) == 0) ? -2 : 1;
     }
 
@@ -92,13 +92,33 @@ int removeDirectory(MINODE * parentMInode, MINODE * childMInode, char * childNam
     return outcome;
 }
 
-int removeChild(MINODE * parentInode, char * childName) {
+int removeChild(MINODE * parentMInode, char * childName) {
     int outcome = 0;
-    
-    for (int i = 0; i < 15; i++) {
-        if (parentInode->INODE.i_block[i] == 0) {
-            printf("No entry of %s found in parent directory...\n", childName);
+    char buffer[BLKSIZE];
+    char * curPtr = NULL;
+    DIR * curDir = NULL;
+    DIR * prevDir = NULL;
+    int i = 0;
+
+    for (; i < 12; i++) {
+        if (parentMInode->INODE.i_block[i] == 0) {
+            break;
         }
+
+        get_block(parentMInode->dev, parentMInode->INODE.i_block[i], buffer);
+
+        while (
+            curPtr - buffer < BLKSIZE &&
+            strncmp(curDir->name, childName, curDir->name_len) != 0
+        ) {
+            curPtr += curDir->rec_len;
+            prevDir = curDir;
+            curDir = (DIR *) curPtr;
+        }
+    }
+
+    if ( parentMInode->INODE.i_block[i] != 0 ) {
+
     }
 
     return outcome;

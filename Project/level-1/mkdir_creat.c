@@ -156,7 +156,7 @@ int enter_name(MINODE * parentInode, int childInodeNum, char * childName) {
     u16 needed_length = 4*((11+strlen(childName))/4);
 
     int i = 0;
-    for(i = 0; i < 12; i++) {
+    for (i = 0; i < 12; i++) {
         if (parentInode->INODE.i_block[i] == 0) {
             printf("No other entries in data block...\n");
             break;
@@ -167,7 +167,7 @@ int enter_name(MINODE * parentInode, int childInodeNum, char * childName) {
         dp = (DIR *) cp;
 
         printf("Stepping to last entry in data block...\n");
-        while(cp + dp->rec_len < buffer + BLKSIZE) {
+        while (cp + dp->rec_len < buffer + BLKSIZE) {
             printf("Checking record: %.*s\n", dp->name_len, dp->name);
             cp += dp->rec_len;
             dp = (DIR *) cp;
