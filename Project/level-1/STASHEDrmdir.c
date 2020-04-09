@@ -110,7 +110,7 @@ int removeChild(MINODE * parentMInode, char * childName) {
     DIR * curDirEnt = NULL;
     DIR * prevDirEnt = NULL;
 
-    for (int i = 0; i < 15; i++) {
+    for (int i = 0; i < 12; i++) {
         // Shouldn't happen, but useful printout should it occur anyways.
         if (parentMInode->INODE.i_block[i] == 0) {
             printf("Couldn't find the name in any allocated data block =/ INODE: %d NAME: %s\n", parentMInode->ino, childName);
@@ -131,7 +131,19 @@ int removeChild(MINODE * parentMInode, char * childName) {
             curDirEnt = (DIR *) curBytePtr;
         }
 
-        if (curBytePtr - buffer < BLKSIZE) {
+        if (curBytePtr + curDirEnt->rec_len - buffer >= BLKSIZE) {
+            if (curBytePtr == buffer) {
+                int deallocatedBlock = parentMInode->INODE.i_block[i];
+                for(; i < 11; i++) {
+                    parentMInode->INODE.i_block[i] = parentMInode->INODE.i_block[i+1];
+                }
+                parentMInode->INODE.i_block[i+1] = 0;
+                bdalloc(parentMInode->dev, deallocatedBlock);
+            }
+        } else {
+            char * lastEntByte = buffer;
+            DIR * lastDirEnt = (DIR *) buffer;
+            while (last/*STASHING HERE FROM KCS SAMPLE*/)
             // we found the corect directory entry node and exited the while loop early.
             if (
                 // (prevDirEnt != NULL) || // this just means its first. not only
@@ -144,7 +156,7 @@ int removeChild(MINODE * parentMInode, char * childName) {
 
                 while(curBytePtr + removedRecordLength - buffer < BLKSIZE) {
 
-printf("is this the infinite loop? %4s %d\n", curDirEnt->name, curDirEnt->rec_len);
+printf("is this the infinite loop? %.4s %d\n", curDirEnt->name, curDirEnt->rec_len);
 getchar();
                     prevDirEnt = curDirEnt;
                     curBytePtr += curDirEnt->rec_len;
@@ -152,14 +164,8 @@ getchar();
                     
                     memcpy(prevDirEnt, curDirEnt, curDirEnt->rec_len);
                 }
+printf("we dont make in here, right?\n");
                 prevDirEnt->rec_len += removedRecordLength;
-            } else {
-                int deallocatedBlock = parentMInode->INODE.i_block[i];
-                for(; i < 11; i++) {
-                    parentMInode->INODE.i_block[i] = parentMInode->INODE.i_block[i+1];
-                }
-                parentMInode->INODE.i_block[i+1] = 0;
-                bdalloc(parentMInode->dev, deallocatedBlock);
             }
 
             put_block(parentMInode->dev, parentMInode->INODE.i_block[i], buffer);
