@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-
-=======
->>>>>>> ff18252c8c54f57e1ee8c096079bf7c8cec66142
 int tryRemoveDirectory(char * path);
 int removeDirectory(MINODE * parentInode, MINODE * childInode, char * childName);
 int removeChild(MINODE * parentInode, char * childName);
