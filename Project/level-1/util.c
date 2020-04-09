@@ -50,7 +50,7 @@ MINODE *iget(int dev, int ino)
     }
   }
     
-  for (i=0; i<NMINODE; i++){
+   for (i=0; i<NMINODE; i++){
     mip = &minode[i];
     if (mip->refCount == 0){
        //printf("allocating NEW minode[%d] for [%d %d]\n", i, dev, ino);
@@ -70,7 +70,8 @@ MINODE *iget(int dev, int ino)
        mip->INODE = *ip;
        return mip;
     }
-  }   
+  }
+
   printf("PANIC: no more free minodes\n");
   return 0;
 }
@@ -229,8 +230,6 @@ int clr_bit(char *buf, int bit) {
 }
 
 /************** ALLOCATION FUNCTIONS **********************/
-
-
 int ialloc(int dev)  // allocate an inode number from inode_bitmap
 {
   int  i;
@@ -266,4 +265,41 @@ int balloc(int dev) {
       }
    }
    return 0;
+}
+
+
+/********************* DEALLOCATION FUNCTIONS ****************************/
+int idalloc(int device, int inodeNum) {
+    char buffer[BLKSIZE];
+
+    if (inodeNum > ninodes) {
+        printf("Error: inode number #%d out of range\n", inodeNum);
+        return 0;
+    }
+
+    get_block(device, imap, buffer);
+    clr_bit(buffer, inodeNum-1);
+    put_block(device, imap, buffer);
+
+    sp->s_free_inodes_count++;
+    gp->bg_free_inodes_count++;
+
+    return 1;
+}
+
+int bdalloc(int device, int block) {
+    u32 total_blocks = sp->s_blocks_count;
+    char buffer[BLKSIZE];
+    get_block(device, bmap, buffer);
+
+    if (block > total_blocks || tst_bit(buffer, block) == 0) {
+        printf("Error: block number #%d out of range\n", block);
+        return 0;
+    }
+    clr_bit(buffer, block);
+    put_block(device, bmap, buffer);
+    
+    sp->s_free_blocks_count++;
+    gp->bg_free_blocks_count++;
+    return 1;
 }

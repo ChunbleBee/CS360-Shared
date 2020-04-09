@@ -82,19 +82,12 @@ int tryMakeDirectory(char * path) { // mkdir
     char * childName = basename(path);
     char * parentPath = dirname(path2);
     if (strcmp(parentPath, "") == 0) parentPath = ".";
-    printf("Parent Path: %s\nNew directory name: %s\n", parentPath, childName);
-    printf("Finding parent inode value...\n");
-    // getchar();
+
     int parentInodeNum = getino(parentPath);
-    printf("Found! %d\nMounting parent inode...\n", parentInodeNum);
-    // getchar();
     MINODE * parentMInode = iget(dev, parentInodeNum);
-    printf("Mounted!\nTesting for directory and availability...\n");
-    // getchar();
     if (S_ISDIR(parentMInode->INODE.i_mode)) {
         if (search(parentMInode, childName) == 0) {
             printf("Found directory, and name available.\n");
-            // getchar();
             makeDirectory(parentMInode, childName);
             parentMInode->refCount++;
             parentMInode->dirty = 1;

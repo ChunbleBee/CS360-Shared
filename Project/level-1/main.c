@@ -28,6 +28,7 @@ int nblocks, ninodes, bmap, imap, inode_start; // disk parameters
 #include "util.c"
 #include "cd_ls_pwd.c"
 #include "mkdir_creat.c"
+#include "rmdir.c"
 
 int init()
 {
@@ -153,6 +154,11 @@ int main(int argc, char *argv[ ])
     else if (strcmp(cmd, "creat") == 0) {
       if (tryCreate(pathname) == 0) {
         printf("creat %s failed\n", pathname);
+      }
+    }
+    else if (strcmp(cmd, "rmdir") == 0) {
+      if (tryRemoveDirectory(pathname) <= 0) {
+        printf("rmdir %s failed\n");
       }
     }
   }
