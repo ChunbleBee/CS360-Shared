@@ -2,7 +2,7 @@ int tryRemoveDirectory(char * path);
 int removeDirectory(MINODE * parentInode, MINODE * childInode, char * childName);
 int removeChild(MINODE * parentInode, char * childName);
 
-int tryRemoveDirectory(char * path) {
+int tryRemoveDirectory(char * path) { // rmdir
     int outcome = -1;
     if (path[0] = '/') {
         dev = root->dev;

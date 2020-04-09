@@ -1,3 +1,4 @@
+
 int tryLink(char * oldPath, char * newPath) { // link
     if (oldPath[0] == '/') {
         dev = root->dev;
@@ -19,7 +20,6 @@ int tryLink(char * oldPath, char * newPath) { // link
         if (oldChildInodeNum != 0) {
             MINODE * oldChildMInode = iget(dev, oldChildInodeNum);
             if (S_ISDIR(oldChildMInode->INODE.i_mode) == 0) {
-                // try new path here //
                 int newDev;
                 if (newPath[0] == '/') {
                     newDev = root->dev;
@@ -50,36 +50,72 @@ int tryLink(char * oldPath, char * newPath) { // link
                             iput(newParentMInode);
                             iput(oldChildMInode);
                             iput(oldParentMInode);
-                            return 0;
+                            return -6;
                         }
                     } else {
                         printf("%s is not a directory\n", newParentPath);
                         iput(newParentMInode);
                         iput(oldChildMInode);
                         iput(oldParentMInode);
-                        return 0;
+                        return -5;
                     }
                 } else {
                     printf("%s and %s are not on the same device\n", oldChildName, newPath);
                     iput(oldChildMInode);
                     iput(oldParentMInode);
-                    return 0;
+                    return -4;
                 }
-                ///////////////////////
             } else {
                 printf("%s is a directory\n", oldChildName);
                 iput(oldChildMInode);
                 iput(oldParentMInode);
-                return 0;
+                return -3;
             }
         } else {
             printf("%s does not exist in %s\n", oldChildName, oldParentPath);
             iput(oldParentMInode);
-            return 0;
+            return -2;
         }
     } else {
         printf("%s is not a directory\n", oldParentPath);
         iput(oldParentMInode);
-        return 0;
+        return -1;
+    }
+}
+
+int tryUnlink(char *path) {
+    if (path[0] == '/') {
+        dev = root->dev;
+    } else {
+        dev = running->cwd->dev;
+    }
+    int childInodeNum = getino(path);
+    if (childInodeNum == 0) {
+        printf("%s does not exist\n", path);
+        return -1;
+    }
+    MINODE * childMInode = iget(dev, childInodeNum);
+    if (S_ISREG(childMInode->INODE.i_mode) || S_ISSLNK(childMInode->INODE.i_mode)) {
+        char pathCopy[128];
+        strcpy(pathCopy, path);
+        char * childName = basename(path);
+        char * parentPath = dirname(pathCopy);
+        int parentInodeNum = getino(parentPath);
+        MINODE * parentMInode = iget(dev, parentInodeNum);
+        rm_child(parentMInode, childName);
+        parentMInode->dirty = 1;
+        iput(parentMInode);
+        childMInode->INODE.i_links_count--;
+        if (childMInode->INODE.i_links_count > 0) {
+            childMInode->dirty = 1;
+        } else {
+            freeInodeAndBlocks(MINODE * childMInode);
+        }
+        iput(mip);
+        return 1;
+    } else {
+        printf("%s is not a regular file or a symbolic link\n", path);
+        iput(childMInode);
+        return -2;
     }
 }

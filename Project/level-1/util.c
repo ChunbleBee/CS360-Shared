@@ -267,7 +267,6 @@ int balloc(int dev) {
    return 0;
 }
 
-
 /********************* DEALLOCATION FUNCTIONS ****************************/
 int idalloc(int device, int inodeNum) {
    char buffer[BLKSIZE];
@@ -303,6 +302,17 @@ int bdalloc(int device, int block) {
    gp->bg_free_blocks_count++;
 
    return 1;
+}
+
+int freeInodeAndBlocks (MINODE * mounted) {
+   printf("freeing inode and data blocks of %d\n", mounted->ino);
+   INODE * pInode = &(mounted->INODE);
+   // for now we assume no indirect blocks
+   int numBlocks = pInode->i_blocks;
+   for (int i = 0; i < numBlocks; i++) {
+      bdalloc(mounted->dev, pInode->i_block[i])
+   }
+   idalloc(mounted->dev, mounted->ino);
 }
 
 /*********** OTHER UTILITY FUNCTIONS *********/
