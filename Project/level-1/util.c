@@ -267,3 +267,7 @@ int balloc(int dev) {
    }
    return 0;
 }
+
+int freeInodeAndBlocks (int dev, int inodeNum) {
+   print('todo lolz');
+}
