@@ -84,8 +84,9 @@ int removeDirectory(MINODE * parentMInode, MINODE * childMInode, char * childNam
         }
 
         freeInodeAndBlocks(childMInode->dev, childMInode->ino);
-        outcome = (removeChild(parentMInode, childName))
+        outcome = (removeChild(parentMInode, childName) == 0) ? -2 : 1;
     }
+
     childMInode->dirty = 1;
     iput(childMInode);
     return outcome;
@@ -94,5 +95,11 @@ int removeDirectory(MINODE * parentMInode, MINODE * childMInode, char * childNam
 int removeChild(MINODE * parentInode, char * childName) {
     int outcome = 0;
     
+    for (int i = 0; i < 15; i++) {
+        if (parentInode->INODE.i_block[i] == 0) {
+            printf("No entry of %s found in parent directory...\n", childName);
+        }
+    }
+
     return outcome;
 }

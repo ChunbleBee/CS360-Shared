@@ -158,15 +158,12 @@ int main(int argc, char *argv[ ])
         printf("creat %s failed\n", pathname);
       }
     }
-<<<<<<< HEAD
     else if (strcmp(cmd, "rmdir") == 0) {
       if (tryRemoveDirectory(pathname) <= 0) {
         printf("rmdir %s failed\n");
-=======
     else if (strcmp(cmd, "link") == 0) {
       if (tryLink(pathname, pathname2) == 0) {
         printf("link %s %s failed\n", pathname, pathname2);
->>>>>>> d4f04026260145a380500e12987a2cd93120cfc4
       }
     }
   }
