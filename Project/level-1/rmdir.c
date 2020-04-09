@@ -31,15 +31,21 @@ int tryRemoveDirectory(char * path) { // rmdir
                     ) {
                         outcome = removeDirectory(parentMInode, childMInode, childName);
                     } else {
+                        printf("incorrect permissions\n");
                         outcome = -2;
                     }
                 } else {
-                    iput(childMInode);
+                    printf("child isn't directory\n");
                 }
+                iput(childMInode);
             }
+        } else {
+            printf("child doesn't exist\n");
         }
 
         iput(parentMInode);
+    } else {
+        printf("parent not directory\n");
     }
 
 
@@ -57,17 +63,20 @@ int tryRemoveDirectory(char * path) { // rmdir
 
 int removeDirectory(MINODE * parentMInode, MINODE * childMInode, char * childName) {
     int outcome = -3;
-
+    printf("inside removeDirectory()\nrefCount: %d, iLinks: %d\n", childMInode->refCount, childMInode->INODE.i_links_count);
+    getchar();
     if (
         childMInode->refCount == 1 &&
         childMInode->INODE.i_links_count <= 2
     ) {
         //refCount == 1 means only this process is using it.
         //links_count <= 2 means only has self link, and link from parent.
-
+        printf("Inside if\n");
+        getchar();
         int numEntries = 0;
         char buffer[BLKSIZE];
 
+        printf("at for\n");
         for (int i = 0; i < 15; i++) {
             if (childMInode->INODE.i_block[i] == 0 || numEntries > 2) {
                 break;
@@ -83,12 +92,14 @@ int removeDirectory(MINODE * parentMInode, MINODE * childMInode, char * childNam
             }
         }
 
+        printf("attempting to free inodes and blocks\n");
+        getchar();
+        childMInode->dirty = 1;
         freeInodeAndBlocks(childMInode);
         outcome = (removeChild(parentMInode, childName) == -1) ? outcome : 0;
+        parentMInode->dirty = 1;
     }
-
-    childMInode->dirty = 1;
-    iput(childMInode);
+    printf("freeing inode\n");
     return outcome;
 }
 
