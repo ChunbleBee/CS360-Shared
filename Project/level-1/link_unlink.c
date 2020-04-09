@@ -38,13 +38,7 @@ int tryLink(char * oldPath, char * newPath) { // link
 
                     if (S_ISDIR(newParentMInode->INODE.i_mode)) {
                         if (search(newParentMInode, newChildName) == 0) {
-// printf("Befor enter_name: ");
-// show(newParentMInode);
-// printf("\n");
                             enter_name(newParentMInode, oldChildInodeNum, newChildName);
-// printf("    After enter_name: ");
-// show(newParentMInode);
-// printf("\n");
                             oldChildMInode->INODE.i_links_count++;
                             oldChildMInode->dirty = 1;
                             iput(newParentMInode);
@@ -107,16 +101,16 @@ int tryUnlink(char *path) {
         char * childName = basename(path);
         char * parentPath = dirname(pathCopy);
         int parentInodeNum = getino(parentPath);
+
         MINODE * parentMInode = iget(dev, parentInodeNum);
-        // printf("I made it this far\n");
+        printf("I made it this far\n");
         removeChild(parentMInode, childName);
-        // printf("after removeChild\n");
+        printf("after removeChild\n");
         parentMInode->dirty = 1;
         iput(parentMInode);
         childMInode->INODE.i_links_count--;
-        if (childMInode->INODE.i_links_count > 0) {
-            childMInode->dirty = 1;
-        } else {
+        childMInode->dirty = 1;
+        if (childMInode->INODE.i_links_count <= 0) {
             freeInodeAndBlocks(childMInode);
         }
         iput(childMInode);

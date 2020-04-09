@@ -133,10 +133,10 @@ int makeDirectory(MINODE * parentInode, char * childName) {
 
     mounted->dirty = 1;
 
-    char buffer[BLKSIZE];
+    u8 buffer[BLKSIZE];
     memset(buffer, '\0', BLKSIZE);
     //Child inode information
-    char * cp = buffer;
+    u8 * cp = buffer;
     dp = (DIR *) cp;
     dp->inode = mounted->ino;
     dp->name_len = 1;
@@ -158,7 +158,7 @@ int makeDirectory(MINODE * parentInode, char * childName) {
 }
 
 int enter_name(MINODE * parentInode, int childInodeNum, char * childName) {
-    char buffer[BLKSIZE];
+    u8 buffer[BLKSIZE];
     memset(buffer, '\0', BLKSIZE);
     u16 needed_length = 4*((11+strlen(childName))/4);
 
@@ -170,7 +170,7 @@ int enter_name(MINODE * parentInode, int childInodeNum, char * childName) {
         }
 
         get_block(parentInode->dev, parentInode->INODE.i_block[i], buffer);
-        char * cp = buffer;
+        u8 * cp = buffer;
         dp = (DIR *) cp;
 
         printf("Stepping to last entry in data block...\n");

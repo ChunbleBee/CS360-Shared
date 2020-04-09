@@ -1,32 +1,10 @@
+<<<<<<< HEAD
 
+=======
+>>>>>>> ff18252c8c54f57e1ee8c096079bf7c8cec66142
 int tryRemoveDirectory(char * path);
 int removeDirectory(MINODE * parentInode, MINODE * childInode, char * childName);
 int removeChild(MINODE * parentInode, char * childName);
-
-int show(MINODE *pip) { // kc's show fn
-  char *cp, buf[BLKSIZE], temp[256];
-  DIR *dp;
-  
-  for(int i = 0; i < 12; i++)
-  {
-    if (pip->INODE.i_block[i]==0)
-      break;
-    printf("blk=%d\n", pip->INODE.i_block[i]);
-     
-    get_block(pip->dev, pip->INODE.i_block[i], buf);
-    dp = (DIR *) buf;
-    cp = buf;
-    
-    while(cp < buf + BLKSIZE)
-    {
-      strncpy(temp, dp->name, dp->name_len);
-      temp[dp->name_len] = 0;
-      printf("[%d %d %s] ", dp->inode, dp->rec_len, temp);
-      cp += dp->rec_len;
-      dp = (DIR *)cp;
-    }
-  }
-}
 
 int tryRemoveDirectory(char * path) { // rmdir
     printf("This is the initial path: %s\n", path);
@@ -104,8 +82,7 @@ int removeDirectory(MINODE * parentMInode, MINODE * childMInode, char * childNam
         printf("Inside if\n");
         getchar();
         int numEntries = 0;
-        char buffer[BLKSIZE];
-
+        u8 buffer[BLKSIZE];
         printf("at for\n");
         for (int i = 0; i < 15; i++) {
             if (childMInode->INODE.i_block[i] == 0 || numEntries > 2) {
@@ -113,7 +90,7 @@ int removeDirectory(MINODE * parentMInode, MINODE * childMInode, char * childNam
             }
 
             get_block(childMInode->dev, childMInode->INODE.i_block[i], buffer);
-            char * cp = buffer;
+            u8 * cp = buffer;
             dp = (DIR *) cp;
             while (cp + dp->rec_len < buffer + BLKSIZE) {
                 numEntries++;
@@ -135,8 +112,9 @@ int removeDirectory(MINODE * parentMInode, MINODE * childMInode, char * childNam
 
 int removeChild(MINODE * parentMInode, char * childName) {
     int outcome = -1;
-    char buffer[BLKSIZE];
-    char * curBytePtr = NULL;
+    u8 buffer[BLKSIZE];
+    u8 * curBytePtr = NULL;
+    u8 * prevBytePtr = NULL;
     DIR * curDirEnt = NULL;
     DIR * prevDirEnt = NULL;
 
@@ -163,45 +141,35 @@ int removeChild(MINODE * parentMInode, char * childName) {
 
         if (curBytePtr - buffer < BLKSIZE) {
             // we found the corect directory entry node and exited the while loop early.
-            if (curDirEnt->rec_len != BLKSIZE) { // not only entry
-                if (curBytePtr + curDirEnt->rec_len - buffer < BLKSIZE) { // not last entry
-                    int removedRecordLength = curDirEnt->rec_len;
-                    //prevDirEnt = curDirEnt;
-                    //curBytePtr += removedRecordLength;
-                    //curDirEnt = (DIR *) curBytePtr;
-    printf("l4\n");
-                    while(/*((char *) prevDirEnt) + prevDirEnt->rec_len*/curBytePtr + removedRecordLength - buffer < BLKSIZE) { // curBytePtr + removedRecordLength - buffer < BLKSIZE
-    printf("\ncurEnd: %d  shifting records: \n", curBytePtr + removedRecordLength - buffer);
-    char testName[128];
-    char * testByte = buffer;
-    DIR * testEnt = (DIR *) testByte;
-    while (testByte + curDirEnt->rec_len + removedRecordLength - buffer < BLKSIZE) {
-        strncpy(testName, testEnt->name, testEnt->name_len);
-        testName[testEnt->name_len] = '\0';
-        printf("[%d %d %s] ", testEnt->inode, testEnt->rec_len, testName);
-        testByte += testEnt->rec_len;
-        testEnt = (DIR *) testByte;
-        printf("why dis loop? %d\n", curBytePtr + curDirEnt->rec_len+ removedRecordLength - buffer);
-        getchar();
-    }
-    getchar();
-    printf("l5\n");
-    printf("prevDirEnt->rec_len: %ld\n", prevDirEnt->rec_len);
-                        prevDirEnt = curDirEnt;
-                        curBytePtr += curDirEnt->rec_len;
-    printf("curDirEnt->rec_len: %ld\n", curDirEnt->rec_len);
+            if (curDirEnt->rec_len != BLKSIZE) {
+                prevBytePtr = (u8 *)prevDirEnt;
+                u16 removedRecordLength = curDirEnt->rec_len;
+
+                if (curBytePtr + removedRecordLength < buffer + BLKSIZE) {
+                    //first or mid entry.
+                    prevBytePtr = curBytePtr;
+                    curBytePtr += removedRecordLength;
+                    prevDirEnt = (DIR *) prevBytePtr;
+                    curDirEnt = (DIR *) curBytePtr;
+
+                    while(curBytePtr + removedRecordLength <= buffer + BLKSIZE) {
+                        u16 recordLength = curDirEnt->rec_len;
+                        printf("byte location: %u, record length: %u\n", prevBytePtr + removedRecordLength, recordLength);
+                        printf("prevDirEnt info: %.*s, inode: %u, reclen: %u, byteptr: %u\n", prevDirEnt->name_len, prevDirEnt->name, prevDirEnt->inode, prevDirEnt->rec_len, prevBytePtr);
+                        printf("curDirEnt info: %.*s, inode: %u, reclen: %u, byteptr: %u\n", curDirEnt->name_len, curDirEnt->name, curDirEnt->inode, curDirEnt->rec_len, curBytePtr);
+                        // getchar();
+                        memcpy(prevBytePtr, curBytePtr, recordLength);
+                        curBytePtr += recordLength;
                         curDirEnt = (DIR *) curBytePtr;
 
-                        memcpy(prevDirEnt, curDirEnt, curDirEnt->rec_len);
-    //printf("%d", curBytePtr + curDirEnt->rec_len + removedRecordLength - buffer );
+                        if (curBytePtr + removedRecordLength < buffer + BLKSIZE) {
+                            prevBytePtr += recordLength;
+                            prevDirEnt = (DIR *) prevBytePtr;
+                        }
                     }
-                    prevDirEnt->rec_len += removedRecordLength;
-    printf("expect 1024: %ld - not last entry, not only entry\n", ((char *)prevDirEnt) + prevDirEnt->rec_len - buffer);
-                } else { // last entry
-                    int removedRecordLength = curDirEnt->rec_len;
-                    prevDirEnt->rec_len += removedRecordLength;
-    printf("expect 1024: %ld - last entry, not only entry\n", ((char *)prevDirEnt) + prevDirEnt->rec_len - buffer);
                 }
+
+                prevDirEnt->rec_len += removedRecordLength;
             } else {
                 int deallocatedBlock = parentMInode->INODE.i_block[i];
                 for(; i < 11; i++) {
