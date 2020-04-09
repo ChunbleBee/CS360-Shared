@@ -116,7 +116,6 @@ int removeChild(MINODE * parentMInode, char * childName) {
             printf("Couldn't find the name in any allocated data block =/ INODE: %d NAME: %s\n", parentMInode->ino, childName);
             break;
         }
-printf("is this the infinite loop?\n");
         get_block(parentMInode->dev, parentMInode->INODE.i_block[i], buffer);
 
         curBytePtr = buffer;
@@ -145,9 +144,10 @@ printf("is this the infinite loop?\n");
 
                 while(curBytePtr + removedRecordLength - buffer < BLKSIZE) {
 
-                    curBytePtr = ((char *) prevDirEnt) + prevDirEnt->rec_len;
-                    prevDirEnt = (DIR *) curBytePtr;
-                    curBytePtr = ((char *) curDirEnt) + curDirEnt->rec_len;
+printf("is this the infinite loop? %4s %d\n", curDirEnt->name, curDirEnt->rec_len);
+getchar();
+                    prevDirEnt = curDirEnt;
+                    curBytePtr += curDirEnt->rec_len;
                     curDirEnt = (DIR *) curBytePtr;
                     
                     memcpy(prevDirEnt, curDirEnt, curDirEnt->rec_len);
