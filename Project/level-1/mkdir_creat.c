@@ -158,8 +158,8 @@ int enter_name(MINODE * parentInode, int childInodeNum, char * childName) {
     int i = 0;
     for (i = 0; i < 12; i++) {
         if (parentInode->INODE.i_block[i] == 0) {
-            printf("No other entries in data block...\n");
-            break;
+            printf("No data block at i_block %d...\n", i);
+            continue;
         }
 
         get_block(parentInode->dev, parentInode->INODE.i_block[i], buffer);
