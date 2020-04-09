@@ -20,6 +20,7 @@ int tryCreate(char * path) { // creat
     if (S_ISDIR(parentMInode->INODE.i_mode)) {
         if (search(parentMInode, childName) == 0) {
             createFile(parentMInode, childName);
+            parentMInode->dirty = 1;
             iput(parentMInode);
             free(path2);
             return 1;
@@ -86,7 +87,7 @@ int tryMakeDirectory(char * path) { // mkdir
         if (search(parentMInode, childName) == 0) {
             printf("Found directory, and name available.\n");
             makeDirectory(parentMInode, childName);
-            parentMInode->refCount++;
+            //parentMInode->refCount++;
             parentMInode->dirty = 1;
             iput(parentMInode);
             free(path2);

@@ -277,7 +277,7 @@ int idalloc(int device, int inodeNum) {
    }
 
    get_block(device, imap, buffer);
-   clr_bit(buffer, inodeNum-1);
+   clr_bit(buffer, inodeNum - 1);
    put_block(device, imap, buffer);
 
    sp->s_free_inodes_count++;
@@ -291,11 +291,19 @@ int bdalloc(int device, int block) {
    char buffer[BLKSIZE];
    get_block(device, bmap, buffer);
 
-   if (block > total_blocks || tst_bit(buffer, block) == 0) {
+   // if (block > total_blocks || tst_bit(buffer, block) == 0) {
+   //    if (block > total_blocks)
+   //       printf("-- e1 -- block out of range.\n");
+   //    if (tst_bit(buffer, block) == 0)
+   //       printf("-- e2 -- block isn't allocated.\n");
+   //    printf("Error: failure in bdalloc(). block number #%d\n", block);
+   //    return 0;
+   // }
+   if (block > total_blocks || tst_bit(buffer, block - 1) == 0) {
       printf("Error: block number #%d out of range\n", block);
       return 0;
    }
-   clr_bit(buffer, block);
+   clr_bit(buffer, block - 1);
    put_block(device, bmap, buffer);
    
    sp->s_free_blocks_count++;

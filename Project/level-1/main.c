@@ -126,7 +126,7 @@ int main(int argc, char *argv[ ])
   
   while(1){
     printf("input command : [ ls | cd | pwd | mkdir | creat\n");
-    printf("                 | rmdir | link | unlink | symlink | quit] ");
+    printf("                | rmdir | link | unlink | symlink | quit] ");
     fgets(line, 128, stdin);
     line[strlen(line)-1] = '\0';
 
@@ -161,7 +161,7 @@ int main(int argc, char *argv[ ])
       }
     }
     else if (strcmp(cmd, "rmdir") == 0) {
-      if (tryRemoveDirectory(pathname) <= 0) {
+      if (tryRemoveDirectory(pathname) < 0) {
         printf("rmdir %s failed\n", pathname);
       }
     }
