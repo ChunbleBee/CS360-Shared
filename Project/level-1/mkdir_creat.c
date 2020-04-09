@@ -27,13 +27,13 @@ int tryCreate(char * path) { // creat
             printf("%s already exists in %s\n", childName, parentPath);
             iput(parentMInode);
             free(path2);
-            return 1;
+            return -2;
         }
     } else {
         printf("%s is not a directory\n", parentPath);
         iput(parentMInode);
         free(path2);
-        return 0;
+        return -1;
     }
 }
 
@@ -45,7 +45,7 @@ int createFile(MINODE * parentInode, char * childName) {
     mounted = iget(parentInode->dev, allocatedInode);
     INODE * pInode = &(mounted->INODE);
 
-    pInode->i_mode = 010644;
+    pInode->i_mode = 0100644;
     pInode->i_uid  = running->uid;
     pInode->i_gid  = running->gid;
     pInode->i_size = 0;
@@ -79,19 +79,12 @@ int tryMakeDirectory(char * path) { // mkdir
     char * childName = basename(path);
     char * parentPath = dirname(path2);
     if (strcmp(parentPath, "") == 0) parentPath = ".";
-    printf("Parent Path: %s\nNew directory name: %s\n", parentPath, childName);
-    printf("Finding parent inode value...\n");
-    // getchar();
+
     int parentInodeNum = getino(parentPath);
-    printf("Found! %d\nMounting parent inode...\n", parentInodeNum);
-    // getchar();
     MINODE * parentMInode = iget(dev, parentInodeNum);
-    printf("Mounted!\nTesting for directory and availability...\n");
-    // getchar();
     if (S_ISDIR(parentMInode->INODE.i_mode)) {
         if (search(parentMInode, childName) == 0) {
             printf("Found directory, and name available.\n");
-            // getchar();
             makeDirectory(parentMInode, childName);
             parentMInode->refCount++;
             parentMInode->dirty = 1;
@@ -102,13 +95,13 @@ int tryMakeDirectory(char * path) { // mkdir
             printf("%s already exists in %s\n", childName, parentPath);
             iput(parentMInode);
             free(path2);
-            return 0;
+            return -2;
         }
     } else {
         printf("%s is not a directory\n", parentPath);
         iput(parentMInode);
         free(path2);
-        return 0;
+        return -1;
     }
 }
 

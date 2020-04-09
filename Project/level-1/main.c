@@ -28,7 +28,9 @@ int nblocks, ninodes, bmap, imap, inode_start; // disk parameters
 #include "util.c"
 #include "cd_ls_pwd.c"
 #include "mkdir_creat.c"
+#include "rmdir.c"
 #include "link_unlink.c"
+#include "symlink.c"
 
 int init()
 {
@@ -70,7 +72,7 @@ int quit()
   for (i=0; i<NMINODE; i++){
     mip = &minode[i];
     while (mip->refCount > 0)
-      iput(mip);
+    iput(mip);
   }
   exit(0);
 }
@@ -95,8 +97,8 @@ int main(int argc, char *argv[ ])
 
   /* verify it's an ext2 file system ***********/
   if (sp->s_magic != 0xEF53){
-      printf("magic = %x is not an ext2 filesystem\n", sp->s_magic);
-      exit(1);
+    printf("magic = %x is not an ext2 filesystem\n", sp->s_magic);
+    exit(1);
   }     
   printf("EXT2 FS OK\n");
   ninodes = sp->s_inodes_count;
@@ -123,7 +125,8 @@ int main(int argc, char *argv[ ])
   // WRTIE code here to create P1 as a USER process
   
   while(1){
-    printf("input command : [ls | cd | pwd | mkdir | creat | link | quit] ");
+    printf("input command : [ ls | cd | pwd | mkdir | creat/n");
+    printf("                 | rmdir | link | unlink | symlink | quit] ");
     fgets(line, 128, stdin);
     line[strlen(line)-1] = '\0';
 
@@ -145,7 +148,7 @@ int main(int argc, char *argv[ ])
       quit();
     else if (strcmp(cmd, "mkdir") == 0) {
       if (strcmp(pathname, "") != 0) {
-        if (tryMakeDirectory(pathname) == 0) {
+        if (tryMakeDirectory(pathname) < 0) {
           printf("mkdir %s failed\n", pathname);
         }
       } else {
@@ -153,13 +156,28 @@ int main(int argc, char *argv[ ])
       }
     }
     else if (strcmp(cmd, "creat") == 0) {
-      if (tryCreate(pathname) == 0) {
+      if (tryCreate(pathname) < 0) {
         printf("creat %s failed\n", pathname);
       }
     }
+    else if (strcmp(cmd, "rmdir") == 0) {
+      if (tryRemoveDirectory(pathname) <= 0) {
+        printf("rmdir %s failed\n", pathname);
+      }
+    }
     else if (strcmp(cmd, "link") == 0) {
-      if (tryLink(pathname, pathname2) == 0) {
+      if (tryLink(pathname, pathname2) < 0) {
         printf("link %s %s failed\n", pathname, pathname2);
+      }
+    }
+    else if (strcmp(cmd, "unlink") == 0) {
+      if (tryUnlink(pathname) < 0) {
+        printf("unlink %s failed\n", pathname);
+      }
+    }
+    else if (strcmp(cmd, "symlink") < 0) {
+      if (symlink(pathname, pathname2) == 0) {
+        printf("symlink %s %s failed\n", pathname, pathname2);
       }
     }
   }
