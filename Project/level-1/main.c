@@ -28,6 +28,7 @@ int nblocks, ninodes, bmap, imap, inode_start; // disk parameters
 #include "util.c"
 #include "cd_ls_pwd.c"
 #include "mkdir_creat.c"
+#include "link_unlink.c"
 
 int init()
 {
@@ -79,7 +80,7 @@ int main(int argc, char *argv[ ])
 {
   int ino;
   char spbuf[BLKSIZE], gpbuf[BLKSIZE];
-  char line[128], cmd[32], pathname[128];
+  char line[128], cmd[32], pathname[128], pathname2[128];
  
   printf("checking EXT2 FS ....");
   if ((fd = open(disk, O_RDWR)) < 0){
@@ -122,16 +123,17 @@ int main(int argc, char *argv[ ])
   // WRTIE code here to create P1 as a USER process
   
   while(1){
-    printf("input command : [ls | cd | pwd | mkdir | creat | quit] ");
+    printf("input command : [ls | cd | pwd | mkdir | creat | link | quit] ");
     fgets(line, 128, stdin);
     line[strlen(line)-1] = '\0';
 
     if (line[0] == '\0')
       continue;
     pathname[0] = '\0';
+    pathname2[0] = '\0';
 
-    sscanf(line, "%s %s", cmd, pathname);
-    printf("cmd=%s pathname=%s\n", cmd, pathname);
+    sscanf(line, "%s %s %s", cmd, pathname, pathname2);
+    printf("cmd=%s pathname=%s pathname2=%s\n", cmd, pathname, pathname2);
   
     if (strcmp(cmd, "ls") == 0)
       ls(pathname);
@@ -153,6 +155,11 @@ int main(int argc, char *argv[ ])
     else if (strcmp(cmd, "creat") == 0) {
       if (tryCreate(pathname) == 0) {
         printf("creat %s failed\n", pathname);
+      }
+    }
+    else if (strcmp(cmd, "link") == 0) {
+      if (tryLink(pathname, pathname2) == 0) {
+        printf("link %s %s failed\n", pathname, pathname2);
       }
     }
   }
