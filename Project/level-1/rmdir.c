@@ -24,12 +24,12 @@ int tryRemoveDirectory(char * path) { // rmdir
             MINODE * childMInode = iget(dev, childInodeNum);
             
             if (childMInode != NULL) {
-                if (S_ISDIR(childInode->INODE.i_mode)) {
+                if (S_ISDIR(childMInode->INODE.i_mode)) {
                     if (running->uid == 0 ||
                         (running->uid == childMInode->INODE.i_uid &&
                         running->uid == parentMInode->INODE.i_uid)
                     ) {
-                        outcome = removeDirectory(parentMInode, childMInode, char * childName);
+                        outcome = removeDirectory(parentMInode, childMInode, childName);
                     } else {
                         outcome = -2;
                     }
@@ -105,7 +105,7 @@ int removeChild(MINODE * parentMInode, char * childName) {
             printf("Couldn't find the name in any allocated data block =/ INODE: %d NAME: %s\n", parentMInode->ino, childName);
             break;
         }
-
+printf("is this the infinite loop?\n");
         get_block(parentMInode->dev, parentMInode->INODE.i_block[i], buffer);
 
         curBytePtr = buffer;
@@ -124,21 +124,22 @@ int removeChild(MINODE * parentMInode, char * childName) {
         if (curBytePtr - buffer < BLKSIZE) {
             // we found the corect directory entry node and exited the while loop early.
             if (
-                (prevDirEnt != NULL) ||
+                // (prevDirEnt != NULL) || // this just means its first. not only
                 (curDirEnt->rec_len != BLKSIZE)
             ) {
                 int removedRecordLength = curDirEnt->rec_len;
-                prevDirEnt = curDirEnt;
-                curBytePtr += removedRecordLength;
-                curDirEnt = (DIR *) curBytePtr;
+                //prevDirEnt = curDirEnt;
+                //curBytePtr += removedRecordLength;
+                //curDirEnt = (DIR *) curBytePtr;
 
-                while(curBytePtr - buffer < BLKSIZE) {
-                    memcpy(prevDirEnt, curDirEnt, curDirEnt->rec_len);
+                while(curBytePtr + removedRecordLength - buffer < BLKSIZE) {
 
                     curBytePtr = ((char *) prevDirEnt) + prevDirEnt->rec_len;
                     prevDirEnt = (DIR *) curBytePtr;
-                    curBytePtr = ((char *) curDirEnt) + prevDirEnt->rec_len;
+                    curBytePtr = ((char *) curDirEnt) + curDirEnt->rec_len;
                     curDirEnt = (DIR *) curBytePtr;
+                    
+                    memcpy(prevDirEnt, curDirEnt, curDirEnt->rec_len);
                 }
                 prevDirEnt->rec_len += removedRecordLength;
             } else {

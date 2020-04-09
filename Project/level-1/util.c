@@ -310,7 +310,7 @@ int freeInodeAndBlocks (MINODE * mounted) {
    // for now we assume no indirect blocks
    int numBlocks = pInode->i_blocks;
    for (int i = 0; i < numBlocks; i++) {
-      bdalloc(mounted->dev, pInode->i_block[i])
+      bdalloc(mounted->dev, pInode->i_block[i]);
    }
    idalloc(mounted->dev, mounted->ino);
 }

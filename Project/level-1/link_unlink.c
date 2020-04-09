@@ -95,23 +95,26 @@ int tryUnlink(char *path) {
         return -1;
     }
     MINODE * childMInode = iget(dev, childInodeNum);
-    if (S_ISREG(childMInode->INODE.i_mode) || S_ISSLNK(childMInode->INODE.i_mode)) {
+    if (S_ISREG(childMInode->INODE.i_mode) || S_ISLNK(childMInode->INODE.i_mode)) {
         char pathCopy[128];
         strcpy(pathCopy, path);
         char * childName = basename(path);
         char * parentPath = dirname(pathCopy);
         int parentInodeNum = getino(parentPath);
         MINODE * parentMInode = iget(dev, parentInodeNum);
-        rm_child(parentMInode, childName);
+        printf("I made it this far\n");
+        removeChild(parentMInode, childName);
+        printf("after removeChild\n");
         parentMInode->dirty = 1;
         iput(parentMInode);
         childMInode->INODE.i_links_count--;
         if (childMInode->INODE.i_links_count > 0) {
             childMInode->dirty = 1;
         } else {
-            freeInodeAndBlocks(MINODE * childMInode);
+            freeInodeAndBlocks(childMInode);
         }
-        iput(mip);
+        iput(childMInode);
+        iput(parentMInode);
         return 1;
     } else {
         printf("%s is not a regular file or a symbolic link\n", path);
