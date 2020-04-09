@@ -52,6 +52,7 @@ int ls_dir(MINODE *mip) {
 
             // printf("[%d %s]  ", dp->inode, temp); // print [inode# name]
             MINODE * inode = iget(dev, dp->inode);
+            printf("Record Length: %u\t", dp->rec_len);
             ls_file(inode, temp);
             iput(inode);
             cp += dp->rec_len;
@@ -71,8 +72,7 @@ int ls(char *pathname) {
         } else {
             printf("Failure: [ %s ] Not a directory!\n", pathname);
         }
-
-        iput(min);
+        if (min != NULL) iput(min);
     } else {
         ls_dir(running->cwd);
     }
@@ -101,7 +101,7 @@ void recursivePWD(MINODE *curNode) {
     }
 }
 
-void pwd(MINODE *wd){
+void pwd(MINODE *wd) {
     printf("CWD = ");
     if (wd == root) printf("/");
     recursivePWD(wd);

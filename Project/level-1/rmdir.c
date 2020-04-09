@@ -111,6 +111,7 @@ int removeChild(MINODE * parentMInode, char * childName) {
     int outcome = -1;
     u8 buffer[BLKSIZE];
     u8 * curBytePtr = NULL;
+    u8 * prevBytePtr = NULL;
     DIR * curDirEnt = NULL;
     DIR * prevDirEnt = NULL;
 
@@ -120,7 +121,6 @@ int removeChild(MINODE * parentMInode, char * childName) {
             printf("Couldn't find the name in any allocated data block =/ INODE: %d NAME: %s\n", parentMInode->ino, childName);
             break;
         }
-        printf("is this the infinite loop?\n");
         get_block(parentMInode->dev, parentMInode->INODE.i_block[i], buffer);
 
         curBytePtr = buffer;
@@ -139,19 +139,33 @@ int removeChild(MINODE * parentMInode, char * childName) {
         if (curBytePtr - buffer < BLKSIZE) {
             // we found the corect directory entry node and exited the while loop early.
             if (curDirEnt->rec_len != BLKSIZE) {
-                int removedRecordLength = curDirEnt->rec_len;
-                //prevDirEnt = curDirEnt;
-                //curBytePtr += removedRecordLength;
-                //curDirEnt = (DIR *) curBytePtr;
+                prevBytePtr = (u8 *)prevDirEnt;
+                u16 removedRecordLength = curDirEnt->rec_len;
 
-                while(curBytePtr + removedRecordLength - buffer < BLKSIZE) {
-                    curBytePtr = ((u8 *) prevDirEnt) + prevDirEnt->rec_len;
-                    prevDirEnt = (DIR *) curBytePtr;
-                    curBytePtr = ((u8 *) curDirEnt) + curDirEnt->rec_len;
+                if (curBytePtr + removedRecordLength < buffer + BLKSIZE) {
+                    //first or mid entry.
+                    prevBytePtr = curBytePtr;
+                    curBytePtr += removedRecordLength;
+                    prevDirEnt = (DIR *) prevBytePtr;
                     curDirEnt = (DIR *) curBytePtr;
-                    
-                    memcpy(prevDirEnt, curDirEnt, curDirEnt->rec_len);
+
+                    while(curBytePtr + removedRecordLength <= buffer + BLKSIZE) {
+                        u16 recordLength = curDirEnt->rec_len;
+                        printf("byte location: %u, record length: %u\n", prevBytePtr + removedRecordLength, recordLength);
+                        printf("prevDirEnt info: %.*s, inode: %u, reclen: %u, byteptr: %u\n", prevDirEnt->name_len, prevDirEnt->name, prevDirEnt->inode, prevDirEnt->rec_len, prevBytePtr);
+                        printf("curDirEnt info: %.*s, inode: %u, reclen: %u, byteptr: %u\n", curDirEnt->name_len, curDirEnt->name, curDirEnt->inode, curDirEnt->rec_len, curBytePtr);
+                        // getchar();
+                        memcpy(prevBytePtr, curBytePtr, recordLength);
+                        curBytePtr += recordLength;
+                        curDirEnt = (DIR *) curBytePtr;
+
+                        if (curBytePtr + removedRecordLength < buffer + BLKSIZE) {
+                            prevBytePtr += recordLength;
+                            prevDirEnt = (DIR *) prevBytePtr;
+                        }
+                    }
                 }
+
                 prevDirEnt->rec_len += removedRecordLength;
             } else {
                 int deallocatedBlock = parentMInode->INODE.i_block[i];
