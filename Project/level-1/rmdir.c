@@ -3,7 +3,7 @@ int removeDirectory(MINODE * parentInode, MINODE * childInode, char * childName)
 int removeChild(MINODE * parentInode, char * childName);
 
 int tryRemoveDirectory(char * path) {
-    int outcome = 0;
+    int outcome = -1;
     if (path[0] = '/') {
         dev = root->dev;
     } else {
@@ -31,7 +31,7 @@ int tryRemoveDirectory(char * path) {
                     ) {
                         outcome = removeDirectory(parentMInode, childMInode, char * childName);
                     } else {
-                        outcome = -1;
+                        outcome = -2;
                     }
                 } else {
                     iput(childMInode);
@@ -43,11 +43,11 @@ int tryRemoveDirectory(char * path) {
     }
 
 
-    if (outcome == 0) {
+    if (outcome == -1) {
         printf("Error: no such directory path '%s/%s' found\n", parentPath, childName);
-    } else if (outcome == -1) {
-        printf("Error: cannot delete another user's directory: '%s/%s'\n", parentPath, childName);
     } else if (outcome == -2) {
+        printf("Error: cannot delete another user's directory: '%s/%s'\n", parentPath, childName);
+    } else if (outcome == -3) {
         printf("Error: failed to remove directory '%s/%s'\n", parentPath, childName);
     }
 
@@ -56,7 +56,7 @@ int tryRemoveDirectory(char * path) {
 }
 
 int removeDirectory(MINODE * parentMInode, MINODE * childMInode, char * childName) {
-    int outcome = -2;
+    int outcome = -3;
 
     if (
         childMInode->refCount == 1 &&
@@ -84,7 +84,7 @@ int removeDirectory(MINODE * parentMInode, MINODE * childMInode, char * childNam
         }
 
         freeInodeAndBlocks(childMInode);
-        outcome = (removeChild(parentMInode, childName) == 0) ? -2 : 1;
+        outcome = (removeChild(parentMInode, childName) == -1) ? outcome : 0;
     }
 
     childMInode->dirty = 1;
@@ -93,33 +93,69 @@ int removeDirectory(MINODE * parentMInode, MINODE * childMInode, char * childNam
 }
 
 int removeChild(MINODE * parentMInode, char * childName) {
-    int outcome = 0;
+    int outcome = -1;
     char buffer[BLKSIZE];
-    char * curPtr = NULL;
-    DIR * curDir = NULL;
-    DIR * prevDir = NULL;
-    int i = 0;
+    char * curBytePtr = NULL;
+    DIR * curDirEnt = NULL;
+    DIR * prevDirEnt = NULL;
 
-    for (; i < 12; i++) {
+    for (int i = 0; i < 15; i++) {
+        // Shouldn't happen, but useful printout should it occur anyways.
         if (parentMInode->INODE.i_block[i] == 0) {
+            printf("Couldn't find the name in any allocated data block =/ INODE: %d NAME: %s\n", parentMInode->ino, childName);
             break;
         }
 
         get_block(parentMInode->dev, parentMInode->INODE.i_block[i], buffer);
 
+        curBytePtr = buffer;
+        curDirEnt = (DIR *) curBytePtr;
+        prevDirEnt = NULL;
+
         while (
-            curPtr - buffer < BLKSIZE &&
-            strncmp(curDir->name, childName, curDir->name_len) != 0
+            (curBytePtr - buffer < BLKSIZE) &&
+            (strncmp(childName, curDirEnt->name, curDirEnt->name_len) != 0)
         ) {
-            curPtr += curDir->rec_len;
-            prevDir = curDir;
-            curDir = (DIR *) curPtr;
+            prevDirEnt = curDirEnt;
+            curBytePtr += curDirEnt->rec_len;
+            curDirEnt = (DIR *) curBytePtr;
+        }
+
+        if (curBytePtr - buffer < BLKSIZE) {
+            // we found the corect directory entry node and exited the while loop early.
+            if (
+                (prevDirEnt != NULL) ||
+                (curDirEnt->rec_len != BLKSIZE)
+            ) {
+                int removedRecordLength = curDirEnt->rec_len;
+                prevDirEnt = curDirEnt;
+                curBytePtr += removedRecordLength;
+                curDirEnt = (DIR *) curBytePtr;
+
+                while(curBytePtr - buffer < BLKSIZE) {
+                    memcpy(prevDirEnt, curDirEnt, curDirEnt->rec_len);
+
+                    curBytePtr = ((char *) prevDirEnt) + prevDirEnt->rec_len;
+                    prevDirEnt = (DIR *) curBytePtr;
+                    curBytePtr = ((char *) curDirEnt) + prevDirEnt->rec_len;
+                    curDirEnt = (DIR *) curBytePtr;
+                }
+                prevDirEnt->rec_len += removedRecordLength;
+            } else {
+                int deallocatedBlock = parentMInode->INODE.i_block[i];
+                for(; i < 11; i++) {
+                    parentMInode->INODE.i_block[i] = parentMInode->INODE.i_block[i+1];
+                }
+                parentMInode->INODE.i_block[i+1] = 0;
+                bdalloc(parentMInode->dev, deallocatedBlock);
+            }
+
+            put_block(parentMInode->dev, parentMInode->INODE.i_block[i], buffer);
+            outcome = 1;
+            break;
         }
     }
 
-    if ( parentMInode->INODE.i_block[i] != 0 ) {
-
-    }
-
+    if (outcome == -1) printf("Something failed in removeChild D=\n");
     return outcome;
 }
