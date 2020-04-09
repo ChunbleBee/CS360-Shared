@@ -36,9 +36,9 @@ int ls_file(MINODE *mip, char *name)
 int ls_dir(MINODE *mip) {
     // printf("ls_dir: list CWD's file names; YOU do it for ls -l\n");
 
-    char buf[BLKSIZE], temp[256];
+    u8 buf[BLKSIZE], temp[256];
     DIR *dp;
-    char *cp;
+    u8 *cp;
     for(int i = 0; i < 12; i++) {
         if (mip->INODE.i_block[i] == 0) break;
     

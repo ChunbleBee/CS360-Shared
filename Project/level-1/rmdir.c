@@ -78,7 +78,7 @@ int removeDirectory(MINODE * parentMInode, MINODE * childMInode, char * childNam
         printf("Inside if\n");
         getchar();
         int numEntries = 0;
-        char buffer[BLKSIZE];
+        u8 buffer[BLKSIZE];
 
         printf("at for\n");
         for (int i = 0; i < 15; i++) {
@@ -87,7 +87,7 @@ int removeDirectory(MINODE * parentMInode, MINODE * childMInode, char * childNam
             }
 
             get_block(childMInode->dev, childMInode->INODE.i_block[i], buffer);
-            char * cp = buffer;
+            u8 * cp = buffer;
             dp = (DIR *) cp;
             while (cp + dp->rec_len < buffer + BLKSIZE) {
                 numEntries++;
@@ -109,8 +109,8 @@ int removeDirectory(MINODE * parentMInode, MINODE * childMInode, char * childNam
 
 int removeChild(MINODE * parentMInode, char * childName) {
     int outcome = -1;
-    char buffer[BLKSIZE];
-    char * curBytePtr = NULL;
+    u8 buffer[BLKSIZE];
+    u8 * curBytePtr = NULL;
     DIR * curDirEnt = NULL;
     DIR * prevDirEnt = NULL;
 
@@ -145,9 +145,9 @@ int removeChild(MINODE * parentMInode, char * childName) {
                 //curDirEnt = (DIR *) curBytePtr;
 
                 while(curBytePtr + removedRecordLength - buffer < BLKSIZE) {
-                    curBytePtr = ((char *) prevDirEnt) + prevDirEnt->rec_len;
+                    curBytePtr = ((u8 *) prevDirEnt) + prevDirEnt->rec_len;
                     prevDirEnt = (DIR *) curBytePtr;
-                    curBytePtr = ((char *) curDirEnt) + curDirEnt->rec_len;
+                    curBytePtr = ((u8 *) curDirEnt) + curDirEnt->rec_len;
                     curDirEnt = (DIR *) curBytePtr;
                     
                     memcpy(prevDirEnt, curDirEnt, curDirEnt->rec_len);

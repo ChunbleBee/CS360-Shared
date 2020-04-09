@@ -1,11 +1,11 @@
 /*********** util.c file ****************/
 
-int get_block(int dev, int blk, char *buf)
+int get_block(int dev, int blk, u8 *buf)
 {
    lseek(dev, (long)blk*BLKSIZE, 0);
    read(dev, buf, BLKSIZE);
 }
-int put_block(int dev, int blk, char *buf)
+int put_block(int dev, int blk, u8 *buf)
 {
    lseek(dev, (long)blk*BLKSIZE, 0);
    write(dev, buf, BLKSIZE);
@@ -208,7 +208,7 @@ int findino(MINODE *mip, u32 *myino) {
 
 /************** WE ADDED BITMAP FUNCTIONS ******************/
 
-int tst_bit(char *buf, int bit) {
+int tst_bit(u8 *buf, int bit) {
    int bytenumber = bit / 8;
    int bitnumber  = bit % 8;
    if (buf[bytenumber] & (1 << bitnumber))
@@ -217,13 +217,13 @@ int tst_bit(char *buf, int bit) {
       return 0;   
 }
 
-int set_bit(char *buf, int bit) {
+int set_bit(u8 *buf, int bit) {
    int bytenumber = bit / 8;
    int bitnumber  = bit % 8;
    buf[bytenumber] |= (1 << bitnumber);
 }
 
-int clr_bit(char *buf, int bit) {
+int clr_bit(u8 *buf, int bit) {
    int bytenumber = bit / 8;
    int bitnumber  = bit % 8;
    buf[bytenumber] &= ~(1 << bitnumber);
