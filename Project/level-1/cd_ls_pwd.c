@@ -39,23 +39,26 @@ int ls_dir(MINODE *mip) {
     char buf[BLKSIZE], temp[256];
     DIR *dp;
     char *cp;
+    for(int i = 0; i < 12; i++) {
+        if (mip->INODE.i_block[i] == 0) break;
+    
+        get_block(dev, mip->INODE.i_block[i], buf);
+        dp = (DIR *)buf;
+        cp = buf;
 
-    // Assume DIR has only one data block i_block[0]
-    get_block(dev, mip->INODE.i_block[0], buf);
-    dp = (DIR *)buf;
-    cp = buf;
+        while (cp < buf + BLKSIZE) {
+            strncpy(temp, dp->name, dp->name_len);
+            temp[dp->name_len] = 0;
 
-    while (cp < buf + BLKSIZE) {
-        strncpy(temp, dp->name, dp->name_len);
-        temp[dp->name_len] = 0;
-
-        // printf("[%d %s]  ", dp->inode, temp); // print [inode# name]
-        ls_file(iget(dev, dp->inode), temp);
-        
-        cp += dp->rec_len;
-        dp = (DIR *)cp;
+            // printf("[%d %s]  ", dp->inode, temp); // print [inode# name]
+            MINODE * inode = iget(dev, dp->inode);
+            ls_file(inode, temp);
+            iput(inode);
+            cp += dp->rec_len;
+            dp = (DIR *)cp;
+        }
+        printf("\n");
     }
-    printf("\n");
 }
 
 int ls(char *pathname) {
