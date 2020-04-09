@@ -38,7 +38,13 @@ int tryLink(char * oldPath, char * newPath) { // link
 
                     if (S_ISDIR(newParentMInode->INODE.i_mode)) {
                         if (search(newParentMInode, newChildName) == 0) {
+// printf("Befor enter_name: ");
+// show(newParentMInode);
+// printf("\n");
                             enter_name(newParentMInode, oldChildInodeNum, newChildName);
+// printf("    After enter_name: ");
+// show(newParentMInode);
+// printf("\n");
                             oldChildMInode->INODE.i_links_count++;
                             oldChildMInode->dirty = 1;
                             iput(newParentMInode);
@@ -102,9 +108,9 @@ int tryUnlink(char *path) {
         char * parentPath = dirname(pathCopy);
         int parentInodeNum = getino(parentPath);
         MINODE * parentMInode = iget(dev, parentInodeNum);
-        printf("I made it this far\n");
+        // printf("I made it this far\n");
         removeChild(parentMInode, childName);
-        printf("after removeChild\n");
+        // printf("after removeChild\n");
         parentMInode->dirty = 1;
         iput(parentMInode);
         childMInode->INODE.i_links_count--;
@@ -114,7 +120,6 @@ int tryUnlink(char *path) {
             freeInodeAndBlocks(childMInode);
         }
         iput(childMInode);
-        iput(parentMInode);
         return 1;
     } else {
         printf("%s is not a regular file or a symbolic link\n", path);
