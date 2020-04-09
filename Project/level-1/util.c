@@ -270,36 +270,39 @@ int balloc(int dev) {
 
 /********************* DEALLOCATION FUNCTIONS ****************************/
 int idalloc(int device, int inodeNum) {
-    char buffer[BLKSIZE];
+   char buffer[BLKSIZE];
 
-    if (inodeNum > ninodes) {
-        printf("Error: inode number #%d out of range\n", inodeNum);
-        return 0;
-    }
+   if (inodeNum > ninodes) {
+      printf("Error: inode number #%d out of range\n", inodeNum);
+      return 0;
+   }
 
-    get_block(device, imap, buffer);
-    clr_bit(buffer, inodeNum-1);
-    put_block(device, imap, buffer);
+   get_block(device, imap, buffer);
+   clr_bit(buffer, inodeNum-1);
+   put_block(device, imap, buffer);
 
-    sp->s_free_inodes_count++;
-    gp->bg_free_inodes_count++;
+   sp->s_free_inodes_count++;
+   gp->bg_free_inodes_count++;
 
-    return 1;
+   return 1;
 }
 
 int bdalloc(int device, int block) {
-    u32 total_blocks = sp->s_blocks_count;
-    char buffer[BLKSIZE];
-    get_block(device, bmap, buffer);
+   u32 total_blocks = sp->s_blocks_count;
+   char buffer[BLKSIZE];
+   get_block(device, bmap, buffer);
 
-    if (block > total_blocks || tst_bit(buffer, block) == 0) {
-        printf("Error: block number #%d out of range\n", block);
-        return 0;
-    }
-    clr_bit(buffer, block);
-    put_block(device, bmap, buffer);
-    
-    sp->s_free_blocks_count++;
-    gp->bg_free_blocks_count++;
-    return 1;
+   if (block > total_blocks || tst_bit(buffer, block) == 0) {
+      printf("Error: block number #%d out of range\n", block);
+      return 0;
+   }
+   clr_bit(buffer, block);
+   put_block(device, bmap, buffer);
+   
+   sp->s_free_blocks_count++;
+   gp->bg_free_blocks_count++;
+
+   return 1;
 }
+
+/*********** OTHER UTILITY FUNCTIONS *********/

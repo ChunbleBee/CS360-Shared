@@ -20,15 +20,12 @@ int tryCreate(char * path) { // creat
     if (S_ISDIR(parentMInode->INODE.i_mode)) {
         if (search(parentMInode, childName) == 0) {
             createFile(parentMInode, childName);
-            iput(parentMInode);
-            free(path2);
-            return 1;
         } else {
             printf("%s already exists in %s\n", childName, parentPath);
-            iput(parentMInode);
-            free(path2);
-            return 1;
         }
+        iput(parentMInode);
+        free(path2);
+        return 1;
     } else {
         printf("%s is not a directory\n", parentPath);
         iput(parentMInode);
@@ -88,15 +85,12 @@ int tryMakeDirectory(char * path) { // mkdir
             makeDirectory(parentMInode, childName);
             parentMInode->refCount++;
             parentMInode->dirty = 1;
-            iput(parentMInode);
-            free(path2);
-            return 1;
         } else {
             printf("%s already exists in %s\n", childName, parentPath);
-            iput(parentMInode);
-            free(path2);
-            return 0;
         }
+        iput(parentMInode);
+        free(path2);
+        return 1;
     } else {
         printf("%s is not a directory\n", parentPath);
         iput(parentMInode);

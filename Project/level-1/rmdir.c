@@ -1,6 +1,6 @@
 int tryRemoveDirectory(char * path);
-int removeDirectory(MINODE * parentInode, MINODE * childInode);
-int removeChild(MINODE * parentInode, int childInode, char * childName);
+int removeDirectory(MINODE * parentInode, MINODE * childInode, char * childName);
+int removeChild(MINODE * parentInode, char * childName);
 
 int tryRemoveDirectory(char * path) {
     int outcome = 0;
@@ -25,14 +25,16 @@ int tryRemoveDirectory(char * path) {
             
             if (childMInode != NULL) {
                 if (S_ISDIR(childInode->INODE.i_mode)) {
-                    // check for user permissions.
-                    outcome = removeDirectory(parentMInode, childMInode);
-                    parentMInode->refCount--;
-                    parentMInode->dirty = 1;
-                    iput(parentMInode);
-                    return outcome;
+                    if (running->uid == 0 ||
+                        (running->uid == childMInode->INODE.i_uid &&
+                        running->uid == parentMInode->INODE.i_uid)
+                    ) {
+                        outcome = removeDirectory(parentMInode, childMInode, char * childName);
+                    } else {
+                        outcome = -1;
+                    }
                 } else {
-                    iput(childInode);
+                    iput(childMInode);
                 }
             }
         }
@@ -53,15 +55,44 @@ int tryRemoveDirectory(char * path) {
     return outcome;
 }
 
-int removeDirectory(MINODE * parentInode, MINODE * childInode) {
-    int outcome = 0;
+int removeDirectory(MINODE * parentMInode, MINODE * childMInode, char * childName) {
+    int outcome = -2;
 
-    
+    if (
+        childMInode->refCount == 1 &&
+        childMInode->INODE.i_links_count <= 2
+    ) {
+        //refCount == 1 means only this process is using it.
+        //links_count <= 2 means only has self link, and link from parent.
 
+        int numEntries = 0;
+        char buffer[BLKSIZE];
+
+        for (int i = 0; i < 15; i++) {
+            if (childMInode->INODE.i_block[i] == 0 || numEntries > 2) {
+                break;
+            }
+
+            get_block(childMInode->dev, childMInode->INODE.i_block[i], buffer);
+            char * cp = buffer;
+            dp = (DIR *) cp;
+            while (cp + dp->rec_len < buffer + BLKSIZE) {
+                numEntries++;
+                cp += dp->rec_len;
+                dp = (DIR *) cp;
+            }
+        }
+
+        freeInodeAndBlocks(childMInode->dev, childMInode->ino);
+        outcome = (removeChild(parentMInode, childName))
+    }
+    childMInode->dirty = 1;
+    iput(childMInode);
     return outcome;
 }
 
-int removeChild(MINODE * parentInode, MINODE * childInode) {
+int removeChild(MINODE * parentInode, char * childName) {
     int outcome = 0;
+    
     return outcome;
 }
