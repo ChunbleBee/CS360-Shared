@@ -33,45 +33,46 @@ int ls_file(MINODE *mip, char *name)
     type, perm, links, owner, group, ctime(&date)+4, size, name);
 }
 
-int ls_dir(MINODE *mip)
-{
-  // printf("ls_dir: list CWD's file names; YOU do it for ls -l\n");
+int ls_dir(MINODE *mip) {
+    // printf("ls_dir: list CWD's file names; YOU do it for ls -l\n");
 
-  char buf[BLKSIZE], temp[256];
-  DIR *dp;
-  char *cp;
+    char buf[BLKSIZE], temp[256];
+    DIR *dp;
+    char *cp;
 
-  // Assume DIR has only one data block i_block[0]
-  get_block(dev, mip->INODE.i_block[0], buf);
-  dp = (DIR *)buf;
-  cp = buf;
+    // Assume DIR has only one data block i_block[0]
+    get_block(dev, mip->INODE.i_block[0], buf);
+    dp = (DIR *)buf;
+    cp = buf;
 
-  while (cp < buf + BLKSIZE){
-     strncpy(temp, dp->name, dp->name_len);
-     temp[dp->name_len] = 0;
-	
-     // printf("[%d %s]  ", dp->inode, temp); // print [inode# name]
-     ls_file(iget(dev, dp->inode), temp);
-	 
-     cp += dp->rec_len;
-     dp = (DIR *)cp;
-  }
-  printf("\n");
+    while (cp < buf + BLKSIZE) {
+        strncpy(temp, dp->name, dp->name_len);
+        temp[dp->name_len] = 0;
+
+        // printf("[%d %s]  ", dp->inode, temp); // print [inode# name]
+        ls_file(iget(dev, dp->inode), temp);
+        
+        cp += dp->rec_len;
+        dp = (DIR *)cp;
+    }
+    printf("\n");
 }
 
-int ls(char *pathname)
-{
-  printf("ls %s\n", pathname);
-  //printf("ls CWD only! YOU do it for ANY pathname\n");
-  if (pathname[0] != '\0') {
-    MINODE * min = iget(dev, getino(pathname));
-    if (S_ISDIR(min->INODE.i_mode)) {
-      ls_dir(min);
-      iput(min);
-    } else
-      printf("Failure: [ %s ] Not a directory!\n", pathname);
-  } else
-    ls_dir(running->cwd);
+int ls(char *pathname) {
+    printf("ls %s\n", pathname);
+    //printf("ls CWD only! YOU do it for ANY pathname\n");
+    if (pathname[0] != '\0') {
+        MINODE * min = iget(dev, getino(pathname));
+        if (S_ISDIR(min->INODE.i_mode)) {
+            ls_dir(min);
+        } else {
+            printf("Failure: [ %s ] Not a directory!\n", pathname);
+        }
+
+        iput(min);
+    } else {
+        ls_dir(running->cwd);
+    }
 }
 
 /*************** Algorithm of pwd ***************
