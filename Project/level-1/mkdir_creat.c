@@ -3,12 +3,9 @@ int enter_name(MINODE * parentInode, int childInodeNum, char * childName);
 int createFile(MINODE * parentInode, char * childName);
 
 int tryCreate(char * path) { // creat
-    MINODE * start = NULL;
     if (path[0] == '/') {
-        start = root;
         dev = root->dev;
     } else {
-        start = running->cwd;
         dev = running->cwd->dev;
     }
 
@@ -28,11 +25,13 @@ int tryCreate(char * path) { // creat
             return 1;
         } else {
             printf("%s already exists in %s\n", childName, parentPath);
+            iput(parentMInode);
             free(path2);
             return 1;
         }
     } else {
         printf("%s is not a directory\n", parentPath);
+        iput(parentMInode);
         free(path2);
         return 0;
     }
@@ -66,14 +65,12 @@ int createFile(MINODE * parentInode, char * childName) {
 }
 
 int tryMakeDirectory(char * path) { // mkdir
-    MINODE * start = NULL;
     if (path[0] == '/') {
         printf("Starting at the root!\n");
-        start = root;
         dev = root->dev;
     } else {
         printf("Starting at the local directory!\n");
-        start = running->cwd;
+        
         dev = running->cwd->dev;
     }
 
@@ -96,11 +93,13 @@ int tryMakeDirectory(char * path) { // mkdir
             return 1;
         } else {
             printf("%s already exists in %s\n", childName, parentPath);
+            iput(parentMInode);
             free(path2);
             return 0;
         }
     } else {
         printf("%s is not a directory\n", parentPath);
+        iput(parentMInode);
         free(path2);
         return 0;
     }
