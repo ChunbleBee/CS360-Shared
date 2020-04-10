@@ -19,8 +19,11 @@ int symlink(char * oldPath, char * newPath) {
         int oldChildInodeNum = search(oldParentMInode, oldChildName);
         if (oldChildInodeNum != 0) {
             MINODE * oldChildMInode = iget(dev, oldChildInodeNum);
-            int created = tryCreate(newPath);
-            if (created == 0) {
+            char newPathCopy[128];
+            strcpy(newPathCopy, newPath);
+            int created = tryCreate(newPathCopy);
+            if (created >= 0) {
+                printf("created new file: %s", newPath);
                 if (newPath[0] == '/') {
                     dev = root->dev;
                 } else {
@@ -38,6 +41,7 @@ int symlink(char * oldPath, char * newPath) {
                 iput(oldParentMInode);
                 return 1;
             } else {
+                printf("failed to create new file: %s\n", newPath);
                 iput(oldParentMInode);
                 return -3;
             }
@@ -53,4 +57,35 @@ int symlink(char * oldPath, char * newPath) {
     }
 }
 
-//int readlink();
+int readlink(MINODE * linkMInode) {
+    if (S_ISLNK(linkMInode->INODE.i_mode)) {
+        strcpy(linkedNameBuf, ((char *) &(linkMInode->INODE.i_block[0])));
+        return linkMInode->INODE.i_size;
+    } else {
+        return -1;
+    }
+}
+
+int readlinkFromPath(char * path) {
+    if (path[0] == '/') {
+        dev = root->dev;
+    } else {
+        dev = running->cwd->dev;
+    }
+    
+    int linkInodeNum = getino(path);
+    if (linkInodeNum == 0) {
+        printf("%s not found\n", path);
+        return -1;
+    }
+    MINODE * linkMInode = iget(dev, linkInodeNum);
+    int linkNameLen = readlink(linkMInode);
+    if (linkNameLen < 0) {
+        printf("%s is not a symlink\n", path);
+        iput(linkMInode);
+        return -2;
+    }
+    printf("%s -> %s\n\n", path, linkedNameBuf);
+    iput(linkMInode);
+    return 1;
+}

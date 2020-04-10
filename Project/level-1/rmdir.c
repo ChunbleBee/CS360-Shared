@@ -150,9 +150,9 @@ int removeChild(MINODE * parentMInode, char * childName) {
 
                     while(curBytePtr + removedRecordLength <= buffer + BLKSIZE) {
                         u16 recordLength = curDirEnt->rec_len;
-                        printf("byte location: %u, record length: %u\n", prevBytePtr + removedRecordLength, recordLength);
-                        printf("prevDirEnt info: %.*s, inode: %u, reclen: %u, byteptr: %u\n", prevDirEnt->name_len, prevDirEnt->name, prevDirEnt->inode, prevDirEnt->rec_len, prevBytePtr);
-                        printf("curDirEnt info: %.*s, inode: %u, reclen: %u, byteptr: %u\n", curDirEnt->name_len, curDirEnt->name, curDirEnt->inode, curDirEnt->rec_len, curBytePtr);
+                        // printf("byte location: %d, record length: %u\n", prevBytePtr + removedRecordLength, recordLength);
+                        // printf("prevDirEnt info: %.*s, inode: %u, reclen: %u, byteptr: %d\n", prevDirEnt->name_len, prevDirEnt->name, prevDirEnt->inode, prevDirEnt->rec_len, prevBytePtr);
+                        // printf("curDirEnt info: %.*s, inode: %u, reclen: %u, byteptr: %d\n", curDirEnt->name_len, curDirEnt->name, curDirEnt->inode, curDirEnt->rec_len, curBytePtr);
                         // getchar();
                         memcpy(prevBytePtr, curBytePtr, recordLength);
                         curBytePtr += recordLength;
