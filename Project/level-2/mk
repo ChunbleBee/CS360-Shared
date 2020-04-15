@@ -1,0 +1,3 @@
+./mkdisk
+gcc main.c
+./a.out

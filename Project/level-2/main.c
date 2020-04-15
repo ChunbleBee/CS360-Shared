@@ -33,6 +33,9 @@ char linkedNameBuf[60]; // global buffer for readlink
 #include "rmdir.c"
 #include "link_unlink.c"
 #include "symlink.c"
+#include "open_close_lseek.c"
+#include "read.c"
+#include "write_cp.c"
 
 int init()
 {
