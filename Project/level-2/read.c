@@ -76,4 +76,6 @@ void cat(char * name, int mode) {
 
         bytesRead = tryRead(fileDesc, buffer, BLKSIZE - 1);
     }
+
+    close_file(fileDesc);
 }
