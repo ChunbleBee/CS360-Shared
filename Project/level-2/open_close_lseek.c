@@ -5,7 +5,7 @@
 
 int open_file(char * filename, int mode) {
     if (mode < 0 || mode > 3) {
-        prinf("Error: open mode %d is not defined\n", mode);
+        printf("Error: open mode %d is not defined\n", mode);
         return -10;
     }
     if (filename[0] == '/') {
@@ -17,10 +17,10 @@ int open_file(char * filename, int mode) {
     if (inodeNum == 0) {
         char filenameCopy[128];
         strcpy(filenameCopy, filename);
-        creat(filenameCopy);
+        createFile(running->cwd, filenameCopy);
         inodeNum = getino(filename);
     }
-    MINODE * mountedINode = iget(dev, ino);
+    MINODE * mountedINode = iget(dev, inodeNum);
 
     // check for regular file
     if (S_ISREG(mountedINode->INODE.i_mode)) {
@@ -53,7 +53,7 @@ int open_file(char * filename, int mode) {
                 (running->uid == mountedINode->INODE.i_uid)) || // user write
             ((mountedINode->INODE.i_mode & 0020) &&
                 (running->uid == mountedINode->INODE.i_gid)) || // group write
-             (mountedINode->INODE-i_mode & 0002) // other write
+             (mountedINode->INODE.i_mode & 0002) // other write
         ) {
             printf("write permission for %s granted\n", filename);
         } else {
@@ -133,7 +133,7 @@ int open_file(char * filename, int mode) {
     // update the file's time fields
     mountedINode->INODE.i_atime = time(0L);
     if (mode != READ_MODE) {
-        mountedINode->INODE.i_mtine = mountedINode->INODE.i_atime;
+        mountedINode->INODE.i_mtime = mountedINode->INODE.i_atime;
     }
 
     // mark MINODE as dirty
@@ -156,7 +156,7 @@ int open_file(char * filename, int mode) {
 
 int truncate(MINODE * mountedINode) {
     printf("freeing data blocks of inode %d\n", mountedINode->ino);
-    INODE * pInode = &(mountedINdoe->INODE);
+    INODE * pInode = &(mountedINode->INODE);
     int numBlocks = pInode->i_blocks;
     int i;
     printf("freeing direct data blocks:");
@@ -187,7 +187,7 @@ int truncate(MINODE * mountedINode) {
     if (i < numBlocks) { // i == 256 + 12, there are double indirect blocks
         int dBlocksBuffer[256], iBlocksBuffer[256];
         get_block(mountedINode->dev, pInode->i_block[13], (u8 *) dBlocksBuffer);
-        prntf("freeing double indirect data blocks:");
+        printf("freeing double indirect data blocks:");
         for (int d = 0; d < 256; d++) {
             if (i == numBlocks) {
                 break;
@@ -199,13 +199,13 @@ int truncate(MINODE * mountedINode) {
                 bdalloc(mountedINode->dev, iBlocksBuffer[i - (d*256) - 256 - 12]);
             }
             printf("\nfreeing indirect blockmap block:% 5d \n", dBlocksBuffer[d]);
-            bdalloc(mountedINode->dev, dBlockBuffer[d]);
+            bdalloc(mountedINode->dev, dBlocksBuffer[d]);
         }
         printf("freeing double indirect blockmap block:% 5d \n", pInode->i_block[13]);
         bdalloc(mountedINode->dev, pInode->i_block[13]);
     }
     mountedINode->INODE.i_atime = time(0L);
-    mountedINode->INODE.i_mtine = mountedINode->INODE.i_atime;
+    mountedINode->INODE.i_mtime = mountedINode->INODE.i_atime;
     mountedINode->INODE.i_size = 0;
     mountedINode->dirty = 1;
     return 1;
@@ -244,7 +244,7 @@ int close_file(int fileDescriptor) {
 }
 
 int lseek_file(int fileDescriptor, int position) {
-    if (fileDescriptor < 0 || fileDescritor >= NFD) {
+    if (fileDescriptor < 0 || fileDescriptor >= NFD) {
         printf("file descriptor %d out of range\n", fileDescriptor);
         return -1;
     }
