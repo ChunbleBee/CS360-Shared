@@ -76,12 +76,14 @@ int open_file(char * filename, int mode) {
         return -4;
     }
 
-    // find previously opened fir reading oft
+    // find previously opened for reading oft
     OFT * prevOpenedOFT;
     if (multiread == 1) {
         for (int i = 0; i < NOFT; i++) { // find the previously opened oft
             prevOpenedOFT = &oft[i];
-            if (prevOpenedOFT->mptr->ino == mountedINode->ino) {
+            if (prevOpenedOFT->mptr != NULL &&
+                prevOpenedOFT->mptr->ino == mountedINode->ino
+            ) {
                 break;
             }
         }
@@ -220,13 +222,23 @@ int close_file(int fileDescriptor) {
     }
     OFT * openedFileTable = running->fd[fileDescriptor];
     running->fd[fileDescriptor] = NULL;
-    for (int i = 0; i < NFD; i++) {
-        if (oft[i].mptr->ino == openedFileTable->mptr->ino) {
+    for (int i = 0; i < NOFT; i++) {
+        if (oft[i].mptr != NULL &&
+            oft[i].mptr->ino == openedFileTable->mptr->ino
+        ) {
             oft[i].refCount--;
         }
     }
-    if (openedFileTable->refCount == 0) {
-        iput(openedFileTable->mptr);
+    MINODE * closedMInode = openedFileTable->mptr;
+    int refCount = openedFileTable->refCount;
+
+    openedFileTable->mode = -1;
+    openedFileTable->mptr = NULL;
+    openedFileTable->offset = 0;
+    openedFileTable->refCount = 0;
+
+    if (refCount == 0) {
+        iput(closedMInode);
     }
     return 1;
 }
@@ -246,4 +258,68 @@ int lseek_file(int fileDescriptor, int position) {
     }
     running->fd[fileDescriptor]->offset = position;
     return 1;
+}
+
+int pfd() {
+    printf("  fd        mode       offset     INODE\n");
+    printf(" ----    ----------    ------    -------\n");
+    char mode[12];
+    for (int i = 0; i < NFD; i++) {
+        if (running->fd[i] != NULL) {
+            if (running->fd[i]->mode == READ_MODE) {
+                strcpy(mode, "   READ   ");
+            } else if (running->fd[i]->mode == WRITE_MODE) {
+                strcpy(mode, "   WRITE  ");
+            } else if (running->fd[i]->mode == READ_WRITE_MODE) {
+                strcpy(mode, "READ_WRITE");
+            } else if (running->fd[i]->mode == APPEND_MODE) {
+                strcpy(mode, "  APPEND  ");
+            }
+            printf("% 2d     %.10s    % 5d    [%3d,%3d]\n",
+                i,
+                mode,
+                running->fd[i]->offset,
+                running->fd[i]->mptr->dev,
+                running->fd[i]->mptr->ino
+            )
+        }
+    }
+    printf("----------------------------------------\n");
+    return 1;
+}
+
+int mydup(int fileDescriptor) {
+    if (fileDescriptor < 0 || fileDescriptor >= NFD) {
+        printf("file descriptor %d out of range\n", fileDescriptor);
+        return -1;
+    }
+    if (running->fd[fileDescriptor] == NULL) {
+        printf("file descriptor %d is not in use\n", fileDescriptor);
+        return -2;
+    }
+    OFT * dupFileTable = NULL;
+    for (int i = 0; i < NOFT; i++) {
+        dupFileTable = &oft[i];
+        if (dupFileTable->refCount == 0) {
+            break;
+        }
+    }
+    dupFileTable->mode     = running->fd[fileDescriptor]->mode;
+    dupFileTable->mptr     = running->fd[fileDescriptor]->mptr;
+    dupFileTable->offset   = running->fd[fileDescriptor]->offset;
+    dupFileTable->refCount = running->fd[fileDescriptor]->refCount;
+    for (int i = 0; i < NFD; i++) {
+        if (running->fd[i] == NULL) {
+            running->fd[i] = dupFileTable;
+            break;
+        }
+    }
+    for (int i = 0; i < NOFT; i++) {
+        if (oft[i].mptr != NULL &&
+            oft[i].mptr->ino == dupFileTable->mptr->ino
+        ) {
+            oft[i].refCount++;
+        }
+    }
+
 }
