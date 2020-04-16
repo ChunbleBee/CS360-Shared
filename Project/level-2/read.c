@@ -78,7 +78,7 @@ void cat(char * name) {
 
     if (fileDesc > 0) {
         int bytesRead = tryRead(fileDesc, buffer, BLKSIZE - 1);
-        putchar("\n");
+        putchar('\n');
 
         while(bytesRead > 0) {
             buffer[bytesRead] = '\0';

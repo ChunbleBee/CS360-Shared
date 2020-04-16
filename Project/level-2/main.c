@@ -138,7 +138,7 @@ int main(int argc, char *argv[ ]) {
     
     while(1) {
         printf("input command : [ ls | cd | pwd | mkdir | creat | rmdir\n");
-        printf("                | link | unlink | symlink | readlink | quit] ");
+        printf("                | link | unlink | symlink | readlink | quit]\n");
         printf("                | cat | write ] ");
         fgets(line, 128, stdin);
         line[strlen(line)-1] = '\0';
