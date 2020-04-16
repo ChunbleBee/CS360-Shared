@@ -17,6 +17,8 @@ MINODE *root;
 
 PROC   proc[NPROC], *running;
 
+OFT oft[NOFT];
+
 char gpath[128]; // global for tokenized components
 char *name[32];  // assume at most 32 components in pathname
 int   n;         // number of component strings
@@ -42,6 +44,7 @@ int init()
     int i, j;
     MINODE *mip;
     PROC   *p;
+    OFT * p_oft;
 
     printf("init()\n");
 
@@ -60,6 +63,13 @@ int init()
         p->status = FREE;
         for (j=0; j<NFD; j++)
             p->fd[j] = NULL;
+    }
+    for (i=0; i<NOFT; i++) {
+        p_oft = &oft[i];
+        p_oft->mode = -1;
+        p_oft->mptr = NULL;
+        p_oft->offset = 0;
+        p_oft->refCount = 0;
     }
 }
 

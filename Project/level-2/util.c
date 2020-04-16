@@ -1,5 +1,7 @@
 /*********** util.c file ****************/
 
+int truncate(MINODE * mountedINode);
+
 int get_block(int dev, int blk, u8 *buf)
 {
    lseek(dev, (long)blk*BLKSIZE, 0);
@@ -317,12 +319,8 @@ return 1;
 
 int freeInodeAndBlocks (MINODE * mounted) {
     printf("freeing inode and data blocks of %d\n", mounted->ino);
-    INODE * pInode = &(mounted->INODE);
-    // for now we assume no indirect blocks
-    int numBlocks = pInode->i_blocks;
-    for (int i = 0; i < numBlocks; i++) {
-        bdalloc(mounted->dev, pInode->i_block[i]);
-    }
+    truncate(mounted);
+    printf("freeing inode: %d", mounted->ino);
     idalloc(mounted->dev, mounted->ino);
 }
 
