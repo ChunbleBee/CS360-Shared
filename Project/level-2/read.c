@@ -50,7 +50,7 @@ int readFromFile(OFT * file, u8 readBuffer[], u32 numBytes) {
         int numBytesToRead = min(min(availableBytes, remainingBytesInBlock), numBytes);
         memcpy(&(readBuffer[bytesRead]), &(blockBuffer[startingByte]), numBytesToRead);
         bytesRead += numBytesToRead;
-        availbleBytes -= numBytesToRead;
+        availableBytes -= numBytesToRead;
         numBytes -= numBytesToRead;
         remainingBytesInBlock -= numBytesToRead;
         file->offset += numBytesToRead;

@@ -7,7 +7,7 @@ int moveFile(OFT * source, OFT * destination);
 
 int tryWrite(int fileDesc, u8 buffer[], u32 numBytes) {
     if (running->fd[fileDesc] == NULL) {
-        print("Error: file is not open!\n");
+        printf("Error: file is not open!\n");
         return -1;
     }
 
@@ -21,7 +21,7 @@ int tryWrite(int fileDesc, u8 buffer[], u32 numBytes) {
     return writeToFile(file, buffer, numBytes);
 }
 
-int writeToFile(OFT * file, u8 writeBuffer, u32 numBytes) {
+int writeToFile(OFT * file, u8 writeBuffer[], u32 numBytes) {
     MINODE * fileINode = file->mptr;
     int offset = file->offset;
     u8 blockBuffer[BLKSIZE];
