@@ -252,7 +252,7 @@ int ialloc(int dev)  {
 
 int balloc(int dev) {
     u32 total_blocks = sp->s_blocks_count;
-    char buf[BLKSIZE];
+    u8 buf[BLKSIZE];
     get_block(dev, bmap, buf);
     for (int i=0; i < total_blocks; i++) {
         if (tst_bit(buf, i) == 0) {
@@ -260,6 +260,10 @@ int balloc(int dev) {
             put_block(dev, bmap, buf);
             sp->s_free_blocks_count--;
             gp->bg_free_blocks_count--;
+
+            get_block(dev, i, buf);
+            memset(buf, 0, BLKSIZE);
+            put_block(dev, i, buf);
             return i+1;
         }
     }

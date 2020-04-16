@@ -1,13 +1,17 @@
+int tryRead(int fileDesc, u8 buffer[], u32 numBytes);
+int readFromFile(OFT * file, u8 readBuffer[], u32 numBytes);
+void cat(char * name);
+
 int tryRead(int fileDesc, u8 buffer[], u32 numBytes) {
     if (running->fd[fileDesc] == NULL) {
-        printf("Error: File descriptor #%u does not exist!\n", fileDesc);
+        printf("Error: File is not open!\n");
         return -1;
     }
 
     OFT * file = running->fd[fileDesc];
 
     if (file->mode != READ_MODE && file->mode != READ_WRITE_MODE) {
-        printf("Error: file not opened in read or read/write mode!\n");
+        printf("Error: file not opened in read mode!\n");
         return -2;
     }
 
@@ -21,7 +25,7 @@ int readFromFile(OFT * file, u8 readBuffer[], u32 numBytes) {
     u8 blockBuffer[BLKSIZE];
     int bytesRead = 0;
 
-    while(numBytes && availableBytes) {
+    while (numBytes && availableBytes) {
         int logicalBlock = file->offset / BLKSIZE;
         int startingByte = offset % BLKSIZE;
         int remainingBytesInBlock = BLKSIZE - startingByte;
@@ -43,16 +47,13 @@ int readFromFile(OFT * file, u8 readBuffer[], u32 numBytes) {
         }
 
         get_block(fileINode->dev, physicalBlock, blockBuffer);
-        int currentByte = startingByte;
-
         int numBytesToRead = min(min(availableBytes, remainingBytesInBlock), numBytes);
-        memcpy(&(readBuffer[bytesRead]), &(blockBuffer[currentByte], numBytesToRead);
+        memcpy(&(readBuffer[bytesRead]), &(blockBuffer[startingByte]), numBytesToRead);
         bytesRead += numBytesToRead;
-        currentByte += numBytesToRead;
         availbleBytes -= numBytesToRead;
         numBytes -= numBytesToRead;
         remainingBytesInBlock -= numBytesToRead;
-
+        file->offset += numBytesToRead;
         // while (remainingBytesInBlock > 0) {
         //     readBuffer[bytesRead] = blockBuffer[currentByte];
         //     bytesRead++;
