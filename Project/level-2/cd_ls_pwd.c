@@ -37,7 +37,7 @@ int ls_file(MINODE *mip, char *name)
     type, perm, links, owner, group, ctime(&date)+4, size, name);
   if (S_ISLNK(mode)) {
     int linkNameLen = readlink(mip);
-    printf(" -> %.*s", linkNameLen, linkedNameBuf);
+    printf(" -> %.*s", linkNameLen, linkedNameBuffer);
   }
   printf("\n");
 }

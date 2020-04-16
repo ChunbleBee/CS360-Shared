@@ -59,7 +59,7 @@ int symlink(char * oldPath, char * newPath) {
 
 int readlink(MINODE * linkMInode) {
     if (S_ISLNK(linkMInode->INODE.i_mode)) {
-        strcpy(linkedNameBuf, ((char *) &(linkMInode->INODE.i_block[0])));
+        strcpy(linkedNameBuffer, ((char *) &(linkMInode->INODE.i_block[0])));
         return linkMInode->INODE.i_size;
     } else {
         return -1;
@@ -86,7 +86,7 @@ int readlinkFromPath(char * path) {
         return -2;
     }
     // "path -> " is omitted in linux shell
-    printf("%s -> %.*s\n\n", path, linkNameLen, linkedNameBuf);
+    printf("%s -> %.*s\n\n", path, linkNameLen, linkedNameBuffer);
     iput(linkMInode);
     return 1;
 }

@@ -24,7 +24,7 @@ int   n;         // number of component strings
 int fd, dev;
 int nblocks, ninodes, bmap, imap, inode_start; // disk parameters
 
-char linkedNameBuf[60]; // global buffer for readlink
+char linkedNameBuffer[60]; // global buffer for readlink
 //////////////////////////////////
 
 #include "util.c"
@@ -49,7 +49,7 @@ int init()
         mip = &minode[i];
         mip->dev = mip->ino = 0;
         mip->refCount = 0;
-        mip->mounted = 0;
+        mip->mounted = -1;
         mip->mptr = 0;
     }
     for (i=0; i<NPROC; i++) {
@@ -59,7 +59,7 @@ int init()
         p->cwd = 0;
         p->status = FREE;
         for (j=0; j<NFD; j++)
-            p->fd[j] = 0;
+            p->fd[j] = NULL;
     }
 }
 
