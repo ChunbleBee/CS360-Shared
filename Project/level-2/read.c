@@ -1,8 +1,8 @@
-int tryRead(int fileDesc, u8 buffer[], u32 numBytes);
-int readFromFile(OFT * file, u8 readBuffer[], u32 numBytes);
+int tryRead(int fileDesc, u8 buffer[], u32 bytesRequested);
+int readFromFile(OFT * file, u8 readBuffer[], u32  bytesRequested);
 void cat(char * name);
 
-int tryRead(int fileDesc, u8 buffer[], u32 numBytes) {
+int tryRead(int fileDesc, u8 buffer[], u32  bytesRequested) {
     if (running->fd[fileDesc] == NULL) {
         printf("Error: File is not open!\n");
         return -1;
@@ -15,43 +15,51 @@ int tryRead(int fileDesc, u8 buffer[], u32 numBytes) {
         return -2;
     }
 
-    return readFromFile(file, buffer, numBytes);
+    return readFromFile(file, buffer,  bytesRequested);
 }
 
-int readFromFile(OFT * file, u8 readBuffer[], u32 numBytes) {
+int readFromFile(OFT * file, u8 readBuffer[], u32 bytesRequested) {
     MINODE * fileMInode = file->mptr;
     u32 availableBytes = fileMInode->INODE.i_size - file->offset;
     u8 blockBuffer[BLKSIZE];
     int bytesRead = 0;
 
-    while (numBytes && availableBytes) {
+    while (bytesRequested && availableBytes) {
         int logicalBlock = file->offset / BLKSIZE;
         int startingByte = file->offset % BLKSIZE;
         int remainingBytesInBlock = BLKSIZE - startingByte;
-        int physicalBlock = logicalBlock;
+        int physicalBlock; // int physicalBlock = logicalBlock;
 
-        if (logicalBlock >= 12 && logicalBlock < 268) {
-            u32 indirectBlockBuffer[256];
-            get_block(fileMInode->dev, fileMInode->INODE.i_block[12], (u8 *) indirectBlockBuffer);
-            physicalBlock = indirectBlockBuffer[logicalBlock - 12];
-        } else if (logicalBlock >= 268 && logicalBlock < 65804) {
-            u32 indirectBlockBuffer[256];
-            u32 doubleIndirectBlockBuffer[256];
-            get_block(fileMInode->dev, fileMInode->INODE.i_block[13], (u8 *) indirectBlockBuffer);
-            get_block(fileMInode->dev, indirectBlockBuffer[(logicalBlock - 268) / 256], (u8 *) doubleIndirectBlockBuffer);
-            physicalBlock = doubleIndirectBlockBuffer[(logicalBlock - 268) % 256];
-        } else if (logicalBlock >= 65804) {
-            printf("Error: File size out of bounds!!! D:\n\t(Triple Indirect Blocks not implemented).\n");
+        if (logicalBlock < 12) {
+            physicalBlock = fileMInode->INODE.i_block[logicalBlock];
+        } else if (logicalBlock < 256 + 12) {
+            int * iBuffer = (int *) blockBuffer;
+            get_block(fileMInode->dev, fileMInode->INODE.i_block[12], 
+                (u8 *) iBuffer);
+            physicalBlock = iBuffer[logicalBlock - 12];
+        } else if (logicalBlock < 256*256 + 256 + 12) {
+            int * iBuffer = (int *) blockBuffer;
+            get_block(fileMInode->dev, fileMInode->INODE.i_block[13],
+                (u8 *) iBuffer);
+            int iBlock = iBuffer[(logicalBlock - 256 - 12) / 256];
+            get_block(fileMInode->dev, iBlock,
+                (u8 *) iBuffer);
+            physicalBlock = iBuffer[(logicalBlock - 256 - 12) % 256];
+        } else {
+            printf("Error: File size out of bounds!!! D:\n");
+            printf("    (Triple Indirect Blocks not implemented).\n");
             return -1;
         }
-        physicalBlock++;
 
         get_block(fileMInode->dev, physicalBlock, blockBuffer);
-        int numBytesToRead = min(min(availableBytes, remainingBytesInBlock), numBytes);
-        memcpy(&(readBuffer[bytesRead]), &(blockBuffer[startingByte]), numBytesToRead);
+        int numBytesToRead = min(min(
+            availableBytes,
+            remainingBytesInBlock),
+            bytesRequested);
+        memcpy(readBuffer, &(blockBuffer[startingByte]), numBytesToRead);
         bytesRead += numBytesToRead;
         availableBytes -= numBytesToRead;
-        numBytes -= numBytesToRead;
+        bytesRequested -= numBytesToRead;
         remainingBytesInBlock -= numBytesToRead;
         file->offset += numBytesToRead;
         // while (remainingBytesInBlock > 0) {
@@ -61,9 +69,9 @@ int readFromFile(OFT * file, u8 readBuffer[], u32 numBytes) {
         //     file->offset++;
 
         //     availableBytes--;
-        //     numBytes--;
+        //     bytesRequest--;
         //     remainingBytesInBlock--;
-        //     if (numBytes <= 0 || availableBytes <= 0) {
+        //     if ( bytesRequested <= 0 || availableBytes <= 0) {
         //         break;
         //     }
         // }

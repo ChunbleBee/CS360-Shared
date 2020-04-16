@@ -326,5 +326,5 @@ int freeInodeAndBlocks (MINODE * mounted) {
 
 /*********** OTHER UTILITY FUNCTIONS *********/
 int min(int x, int y) {
-    return (x > y) ? x : y;
+    return (x < y) ? x : y;
 }
