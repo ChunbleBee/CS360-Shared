@@ -73,11 +73,11 @@ int writeToFile(OFT * file, u8 writeBuffer[], u32 numBytes) {
 
         get_block(fileINode->dev, physicalBlock, blockBuffer);
         int numBytesToWrite = min(remainingBytesInBlock, numBytes);
-        memcpy(&(blockBuffer[startingByte]), &(writeBuffer[bytesRead]), numBytesToWrite);
+        memcpy(&(blockBuffer[startingByte]), &(writeBuffer[bytesWrote]), numBytesToWrite);
         bytesWrote += numBytesToWrite;
         numBytes -= numBytesToWrite;
-        remainingBytesInBlock -= numBytesToRead;
-        file->offset += numBytesToRead;
+        remainingBytesInBlock -= numBytesToWrite;
+        file->offset += numBytesToWrite;
         put_block(fileINode->dev, physicalBlock, blockBuffer);
         
     }
