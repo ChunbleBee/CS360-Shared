@@ -19,7 +19,7 @@ int readFromFile(OFT * file, u8 readBuffer[], u32 numBytes) {
     int offset = file->offset;
     u32 availableBytes = file->mptr->INODE.i_size - offset;
     u8 blockBuffer[BLKSIZE];
-    int readBytes = 0;
+    int bytesRead = 0;
 
     while(numBytes && availableBytes) {
         int logicalBlock = file->offset / BLKSIZE;
@@ -45,37 +45,46 @@ int readFromFile(OFT * file, u8 readBuffer[], u32 numBytes) {
         get_block(fileINode->dev, physicalBlock, blockBuffer);
         int currentByte = startingByte;
 
-        while (remainingBytesInBlock > 0) {
-            readBuffer[readBytes] = blockBuffer[currentByte];
-            readBytes++;
-            currentByte++;
-            file->offset++;
+        int numBytesToRead = min(min(availableBytes, remainingBytesInBlock), numBytes);
+        memcpy(&(readBuffer[bytesRead]), &(blockBuffer[currentByte], numBytesToRead);
+        bytesRead += numBytesToRead;
+        currentByte += numBytesToRead;
+        availbleBytes -= numBytesToRead;
+        numBytes -= numBytesToRead;
+        remainingBytesInBlock -= numBytesToRead;
 
-            availableBytes--;
-            numBytes--;
-            remainingBytesInBlock--;
-            if (numBytes <= 0 || availableBytes <= 0) {
-                break;
-            }
-        }
+        // while (remainingBytesInBlock > 0) {
+        //     readBuffer[bytesRead] = blockBuffer[currentByte];
+        //     bytesRead++;
+        //     currentByte++;
+        //     file->offset++;
+
+        //     availableBytes--;
+        //     numBytes--;
+        //     remainingBytesInBlock--;
+        //     if (numBytes <= 0 || availableBytes <= 0) {
+        //         break;
+        //     }
+        // }
     }
 
-    return readBytes;
+    return bytesRead;
 }
 
-void cat(char * name, int mode) {
+void cat(char * name) {
     u8 buffer[BLKSIZE];
-    int fileDesc = open_file(name, mode);
-    int bytesRead = tryRead(fileDesc, buffer, BLKSIZE - 1);
+    int fileDesc = open_file(name, READ_MODE);
 
-    while(bytesRead > 0) {
-        buffer[bytesRead] = '\0';
-        for (int i = 0; i < BLKSIZE; i++) {
-            putchar(buffer[i]);
+    if (fileDesc > 0) {
+        int bytesRead = tryRead(fileDesc, buffer, BLKSIZE - 1);
+        putchar("\n");
+
+        while(bytesRead > 0) {
+            buffer[bytesRead] = '\0';
+            puts(buffer);
+            bytesRead = tryRead(fileDesc, buffer, BLKSIZE - 1);
         }
 
-        bytesRead = tryRead(fileDesc, buffer, BLKSIZE - 1);
+        close_file(fileDesc);
     }
-
-    close_file(fileDesc);
 }

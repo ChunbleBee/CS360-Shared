@@ -40,7 +40,7 @@ MINODE * iget(int dev, int ino) {
     int blk, offset;
     INODE *ip;
 
-    for (i=0; i<NMINODE; i++){
+    for (i=0; i < NMINODE; i++){
         mip = &minode[i];
         if (mip->dev == dev && mip->ino == ino){
             mip->refCount++;
@@ -49,7 +49,7 @@ MINODE * iget(int dev, int ino) {
         }
     }
 
-    for (i=0; i<NMINODE; i++){
+    for (i=0; i < NMINODE; i++){
         mip = &minode[i];
         if (mip->refCount == 0){
             //printf("allocating NEW minode[%d] for [%d %d]\n", i, dev, ino);

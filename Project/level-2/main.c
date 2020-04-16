@@ -129,6 +129,7 @@ int main(int argc, char *argv[ ]) {
     while(1) {
         printf("input command : [ ls | cd | pwd | mkdir | creat | rmdir\n");
         printf("                | link | unlink | symlink | readlink | quit] ");
+        printf("                | cat | write ] ");
         fgets(line, 128, stdin);
         line[strlen(line)-1] = '\0';
 
@@ -180,6 +181,8 @@ int main(int argc, char *argv[ ]) {
             if (readlinkFromPath(pathname) < 0) {
                 printf("readlink %s failed\n", pathname);
             }
+        } else if (strncmp(cmd) "cat") == 0) {
+            cat(pathname);
         } else printf("no command, cmd: %s", cmd);
     }
 }
