@@ -122,6 +122,7 @@ int open_file(char * filename, int mode) {
         openedFileTable->refCount = 1;
     }
     openedFileTable->offset = (mode == 3) ? mountedINode->INODE.i_size : 0;
+    printf("opened file table offset: %d\n", openedFileTable->offset);
     if (mode == WRITE_MODE) {
         printf("truncating file: %s\n", filename);
         truncate(mountedINode);
@@ -231,6 +232,7 @@ int close_file(int fileDescriptor) {
     }
     MINODE * closedMInode = openedFileTable->mptr;
     int refCount = openedFileTable->refCount;
+    closedMInode->mounted = -1;
 
     openedFileTable->mode = -1;
     openedFileTable->mptr = NULL;

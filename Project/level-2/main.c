@@ -95,6 +95,7 @@ int main(int argc, char *argv[ ]) {
     int ino;
     char spbuf[BLKSIZE], gpbuf[BLKSIZE];
     char line[128], cmd[32], pathname[128], pathname2[128];
+    char * writebuffer;
   
     printf("checking EXT2 FS ....");
     if ((fd = open(disk, O_RDWR)) < 0) {
@@ -138,8 +139,8 @@ int main(int argc, char *argv[ ]) {
     
     while(1) {
         printf("input command : [ ls | cd | pwd | mkdir | creat | rmdir\n");
-        printf("                | link | unlink | symlink | readlink | quit]\n");
-        printf("                | cat | write ] ");
+        printf("                | link | unlink | symlink | readlink | quit |\n");
+        printf("                | cat | write | append] $> ");
         fgets(line, 128, stdin);
         line[strlen(line)-1] = '\0';
 
@@ -149,7 +150,9 @@ int main(int argc, char *argv[ ]) {
         pathname2[0] = '\0';
 
         sscanf(line, "%s %s %s", cmd, pathname, pathname2);
-        printf("cmd=%s pathname=%s pathname2=%s\n", cmd, pathname, pathname2);
+        
+
+        printf("cmd=%s pathname=%s pathname2=%s line=%s\n", cmd, pathname, pathname2, line);
       
         if (strcmp(cmd, "ls") == 0)
             ls(pathname);
@@ -193,6 +196,22 @@ int main(int argc, char *argv[ ]) {
             }
         } else if (strcmp(cmd, "cat") == 0) {
             cat(pathname);
+        } else if (strcmp(cmd, "write") == 0) {
+            int fileDesc = open_file(pathname, WRITE_MODE);
+            strtok(line, " ");
+            strtok(NULL, " ");
+            writebuffer = strtok(NULL, "\n");
+            printf("writebuffer: %s\n", writebuffer);
+            tryWrite(fileDesc, writebuffer, strlen(writebuffer));
+            close_file(fileDesc);
+        }  else if (strcmp(cmd, "append") == 0) {
+            int fileDesc = open_file(pathname, APPEND_MODE);
+            strtok(line, " ");
+            strtok(NULL, " ");
+            writebuffer = strtok(NULL, "\n");
+            printf("writebuffer: %s\n", writebuffer);
+            tryWrite(fileDesc, writebuffer, strlen(writebuffer));
+            close_file(fileDesc);
         } else printf("no command, cmd: %s", cmd);
     }
 }
