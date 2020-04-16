@@ -191,7 +191,7 @@ int main(int argc, char *argv[ ]) {
             if (readlinkFromPath(pathname) < 0) {
                 printf("readlink %s failed\n", pathname);
             }
-        } else if (strncmp(cmd) "cat") == 0) {
+        } else if (strcmp(cmd, "cat") == 0) {
             cat(pathname);
         } else printf("no command, cmd: %s", cmd);
     }

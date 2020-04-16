@@ -281,7 +281,7 @@ int pfd() {
                 running->fd[i]->offset,
                 running->fd[i]->mptr->dev,
                 running->fd[i]->mptr->ino
-            )
+            );
         }
     }
     printf("----------------------------------------\n");
