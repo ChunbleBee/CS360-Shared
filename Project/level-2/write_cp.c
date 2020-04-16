@@ -47,7 +47,7 @@ int writeToFile(OFT * file, u8 writeBuffer[], u32 numBytes) {
             get_block(fileINode->dev, fileINode->INODE.i_block[12], (u8 *) indirectBlockBuffer);
             if (indirectBlockBuffer[logicalBlock - 12] == 0) {
                 indirectBlockBuffer[logicalBlock - 12] = balloc(fileINode->dev);
-                put_block(fileINode->dev, fileINode->INODE.i_block[12], indirectBlockBuffer);
+                put_block(fileINode->dev, fileINode->INODE.i_block[12], (u8 *) indirectBlockBuffer);
             }
         } else if (logicalBlock >= 268 && logicalBlock < 65804) {
             u32 indirectBlockBuffer[256];
