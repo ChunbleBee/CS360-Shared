@@ -38,7 +38,8 @@ int tryLink(char * oldPath, char * newPath) { // link
 
                     if (S_ISDIR(newParentMInode->INODE.i_mode)) {
                         if (search(newParentMInode, newChildName) == 0) {
-                            enter_name(newParentMInode, oldChildInodeNum, newChildName);
+                            enter_name(newParentMInode, oldChildInodeNum,
+                                newChildName);
                             oldChildMInode->INODE.i_links_count++;
                             oldChildMInode->dirty = 1;
                             iput(newParentMInode);
@@ -46,7 +47,8 @@ int tryLink(char * oldPath, char * newPath) { // link
                             iput(oldParentMInode);
                             return 1;
                         } else {
-                            printf("%s already exists in %s\n", newChildName, newParentPath);
+                            printf("%s already exists in %s\n", newChildName,
+                                newParentPath);
                             iput(newParentMInode);
                             iput(oldChildMInode);
                             iput(oldParentMInode);
@@ -60,7 +62,8 @@ int tryLink(char * oldPath, char * newPath) { // link
                         return -5;
                     }
                 } else {
-                    printf("%s and %s are not on the same device\n", oldChildName, newPath);
+                    printf("%s and %s are not on the same device\n",
+                        oldChildName, newPath);
                     iput(oldChildMInode);
                     iput(oldParentMInode);
                     return -4;
@@ -95,7 +98,8 @@ int tryUnlink(char *path) {
         return -1;
     }
     MINODE * childMInode = iget(dev, childInodeNum);
-    if (S_ISREG(childMInode->INODE.i_mode) || S_ISLNK(childMInode->INODE.i_mode)) {
+    if (S_ISREG(childMInode->INODE.i_mode) ||
+        S_ISLNK(childMInode->INODE.i_mode)) {
         char pathCopy[128];
         strcpy(pathCopy, path);
         char * childName = basename(path);

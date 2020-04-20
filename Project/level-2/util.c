@@ -314,15 +314,16 @@ int bdalloc(int device, int block) {
     sp->s_free_blocks_count++;
     gp->bg_free_blocks_count++;
 
-return 1;
+    return 1;
 }
 
-int freeInodeAndBlocks (MINODE * mounted) {
+int freeInodeAndBlocks(MINODE * mounted) {
     printf("freeing inode and data blocks of %d\n", mounted->ino);
     truncate(mounted);
     printf("freeing inode: %d", mounted->ino);
     idalloc(mounted->dev, mounted->ino);
 }
+
 
 /*********** OTHER UTILITY FUNCTIONS *********/
 int min(int x, int y) {
