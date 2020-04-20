@@ -263,9 +263,9 @@ int balloc(int dev) {
             sp->s_free_blocks_count--;
             gp->bg_free_blocks_count--;
 
-            get_block(dev, i, buf);
+            get_block(dev, i + 1, buf);
             memset(buf, 0, BLKSIZE);
-            put_block(dev, i, buf);
+            put_block(dev, i + 1, buf);
             return i+1;
         }
     }
@@ -328,4 +328,57 @@ int freeInodeAndBlocks(MINODE * mounted) {
 /*********** OTHER UTILITY FUNCTIONS *********/
 int min(int x, int y) {
     return (x < y) ? x : y;
+}
+
+
+int printBlockList (MINODE * minode) {
+    INODE * pInode = &(minode->INODE);
+    int iBuffer[256], dBuffer[256];
+    int numBlocks = pInode->i_blocks / 2;
+    int i = 0, d = 0; // d is the number of indirect blocks accessed
+    printf("[INODE %4d] and has %d (1024 byte) blocks\n",
+        minode->ino, pInode->i_blocks / 2);
+    printf("  direct blocks :");
+    for (i = 0; i < 12; i++) {
+        if (i == numBlocks) break;
+        if (i % 6 == 0) printf("\n    ");
+        printf("%4d  ", pInode->i_block[i]);
+    }    
+    if (i < numBlocks) { // i == 12, there are indirect blocks
+        printf("\ni_block[12] = %d : indirect blocks :", pInode->i_block[12]);
+        get_block(minode->dev, pInode->i_block[12], (u8 *) iBuffer);
+        i++; d++;
+        for (; i < d + 256 + 12; i++) {
+            if (i == numBlocks) break;
+            if ((i - (1 + 12)) % 10 == 0) printf("\n    ");
+            printf("%4d  ", iBuffer[i - (1 + 12)]);
+        }
+    }
+    if (i < numBlocks) { // i == 256 + 1 + 12, there are double indirect blocks
+        printf("\ni_block[13] = %d", pInode->i_block[13]);
+        get_block(minode->dev, pInode->i_block[13], (u8 *) dBuffer);
+        i++; d++;
+        int iBlock;
+        int ix = 0; // ix is the index of the indirect block in the double
+                    // indirect buffer
+        int bx = 0; // bx is the index of the data block on the indirect buffer
+        for (; i < d + 256*256 + 256 + 12; i++) {
+            if (i == numBlocks) break;
+            if (bx % 256 == 0) { // (i - d - 256 - 12) % 256 == 0) {
+                bx = 0;
+                // ix = (i - d - 256 - 12) / 256;
+                iBlock = dBuffer[ix];
+                printf("\n    i_block[13][%u] = %u : double indirect blocks :",
+                    ix, iBlock);
+                get_block(minode->dev, iBlock, (u8 *) iBuffer);
+                i++; d++; ix++; // set ix to next ix
+                if (i == numBlocks) break;
+            }
+            if (bx % 10 == 0) printf("\n        ");
+            printf("%4u  ", iBuffer[bx]);
+            bx++;
+        }
+    }
+    printf("\n");
+    return numBlocks;
 }

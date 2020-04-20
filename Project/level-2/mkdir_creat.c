@@ -200,7 +200,7 @@ int enter_name(MINODE * parentInode, int childInodeNum, char * childName) {
     //Reach here, no remaining blocks.
     //Increment number of blocks by 1 and allocate a enw data block
     int allocatedBlock = balloc(parentInode->dev);
-    parentInode->INODE.i_blocks++;
+    parentInode->INODE.i_blocks += 2;
     parentInode->INODE.i_block[i] = allocatedBlock;
     parentInode->INODE.i_size += BLKSIZE;
 

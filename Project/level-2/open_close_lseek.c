@@ -10,6 +10,10 @@ int open_file(char * filename, int mode) {
     }
     int inodeNum = getino(filename);
     if (inodeNum == 0) {
+        if (mode == READ_MODE) {
+            printf("Cannot open %s for reading\n", filename);
+            return -14;
+        }
         char filenameCopy[128];
         strcpy(filenameCopy, filename);
         tryCreate(filenameCopy);
@@ -114,13 +118,17 @@ int open_file(char * filename, int mode) {
     openedFileTable->mode = mode;
     openedFileTable->mptr = mountedINode;
     if (multiread == 1) {
+        // what if it's open multiple times
         prevOpenedOFT->refCount++;
         openedFileTable->refCount = prevOpenedOFT->refCount;
     } else {
         openedFileTable->refCount = 1;
     }
-    openedFileTable->offset = (mode == APPEND_MODE) ?
-        mountedINode->INODE.i_size : 0;
+    if (mode == APPEND_MODE) {
+        openedFileTable->offset = mountedINode->INODE.i_size;
+    } else {
+        openedFileTable->offset = 0;
+    }
     printf("opened file table offset: %d\n", openedFileTable->offset);
     if (mode == WRITE_MODE) {
         printf("truncating file: %s\n", filename);
@@ -154,61 +162,69 @@ int open_file(char * filename, int mode) {
     return fd;
 }
 
-int truncate(MINODE * mountedINode) {
-    printf("freeing data blocks of inode %d\n", mountedINode->ino);
-    INODE * pInode = &(mountedINode->INODE);
-    int numBlocks = pInode->i_blocks;
-    int i;
-    printf("freeing direct data blocks:");
+int truncate(MINODE * minode) {
+    INODE * pInode = &(minode->INODE);
+    int iBuffer[256], dBuffer[256];
+    int numBlocks = pInode->i_blocks / 2;
+    int i = 0, d = 0; // d is the number of indirect blocks accessed
+    printf("[INODE %4d] and has %d (1024 byte) blocks\n",
+        minode->ino, pInode->i_blocks / 2);
     for (i = 0; i < 12; i++) {
-        if (i == numBlocks) {
-            break;
-        }
+        printf("  freeing direct data blocks:");
+        if (i == numBlocks) break;
         if (i % 6 == 0) printf("\n    ");
-        printf("% 5d ", pInode->i_block[i]);
-        bdalloc(mountedINode->dev, pInode->i_block[i]);
+        printf("%4d  ", pInode->i_block[i]);
+        bdalloc(minode->dev, pInode->i_block[i]);
+    }
+    if (i < numBlocks) { // i == 12, there are indirect blocks
+        printf("\ni_block[12] = %d :", pInode->i_block[12]);
+        get_block(minode->dev, pInode->i_block[12], (u8 *) iBuffer);
+        printf("\nfreeing i_block[12] = %4d\n", pInode->i_block[12]);
+        bdalloc(minode->dev, pInode->i_block[12]);
+        printf("freeing indirect data blocks :");
+        i++; d++;
+        for (; i < d + 256 + 12; i++) {
+            if (i == numBlocks) break;
+            if ((i - (1 + 12)) % 10 == 0) printf("\n    ");
+            printf("%4d  ", iBuffer[i - (1 + 12)]);
+            bdalloc(minode->dev, iBuffer[i - (1 + 12)]);
+        }
+    }
+    if (i < numBlocks) { // i == 256 + 1 + 12, there are double indirect blocks
+        printf("\ni_block[13] = %d", pInode->i_block[13]);
+        get_block(minode->dev, pInode->i_block[13], (u8 *) dBuffer);
+        printf("freeing i_block[13] = %u\n", pInode->i_block[13]);
+        bdalloc(minode->dev, pInode->i_block[13]);
+        i++; d++;
+        int iBlock;
+        int ix = 0; // ix is the index of the indirect block in the double
+                    // indirect buffer
+        int bx = 0; // bx is the index of the data block on the indirect buffer
+        for (; i < d + 256*256 + 256 + 12; i++) {
+            if (i == numBlocks) break;
+            if (bx % 256 == 0) { // (i - d - 256 - 12) % 256 == 0) {
+                bx = 0;
+                // ix = (i - d - 256 - 12) / 256;
+                iBlock = dBuffer[ix];
+                printf("\n    i_block[13][%u] = %u : ",ix, iBlock);
+                get_block(minode->dev, iBlock, (u8 *) iBuffer);
+                printf("freeing i_block[13][%u] = %u\n", ix, iBlock);
+                bdalloc(minode->dev, iBlock);
+                i++; d++; ix++; // set ix to next ix
+                if (i == numBlocks) break;
+                printf("    freeing double indirect data blocks :");
+            }
+            if (bx % 10 == 0) printf("\n        ");
+            printf("%4u  ", iBuffer[bx]);
+            bdalloc(minode->dev, iBuffer[bx]);
+            bx++;
+        }
     }
     printf("\n");
-    if (i < numBlocks) { // i == 12, there are indirect blocks
-        int iBlocksBuffer[256];
-        get_block(mountedINode->dev, pInode->i_block[12], (u8 *) iBlocksBuffer);
-        printf("freeing indirect data blocks:");
-        for (; i < 256 + 12; i++) {
-            if (i == numBlocks) {
-                break;
-            }
-            if ((i - 12) % 8 == 0) printf("\n    ");
-            printf("% 5d ", iBlocksBuffer[i - 12]);
-            bdalloc(mountedINode->dev, iBlocksBuffer[i - 12]);
-        }
-        printf("\nfreeing indirect blockmap block:% 5d \n",pInode->i_block[12]);
-        bdalloc(mountedINode->dev, pInode->i_block[12]);
-    }
-    if (i < numBlocks) { // i == 256 + 12, there are double indirect blocks
-        int dBlocksBuffer[256], iBlocksBuffer[256];
-        get_block(mountedINode->dev, pInode->i_block[13], (u8 *) dBlocksBuffer);
-        printf("freeing double indirect data blocks:");
-        for (int d = 0; d < 256; d++) {
-            if (i == numBlocks) {
-                break;
-            }
-            get_block(mountedINode->dev, dBlocksBuffer[d], (u8 *)iBlocksBuffer);
-            for (; i < numBlocks; i++) {
-                if ((i - 12 - 256) % 8 == 0) printf("\n    ");
-                printf("% 5d ", iBlocksBuffer[i - (d*256) - 256 - 12]);
-                bdalloc(mountedINode->dev, iBlocksBuffer[i - (d*256)-256-12]);
-            }
-            printf("\nfreeing indirect blockmap block:% 5d\n",dBlocksBuffer[d]);
-            bdalloc(mountedINode->dev, dBlocksBuffer[d]);
-        }
-        printf("freeing double indirect blockmap block:% 5d \n",
-            pInode->i_block[13]);
-        bdalloc(mountedINode->dev, pInode->i_block[13]);
-    }
-    mountedINode->INODE.i_atime = time(0L);
-    mountedINode->INODE.i_mtime = mountedINode->INODE.i_atime;
-    mountedINode->INODE.i_size = 0;
-    mountedINode->dirty = 1;
+    minode->INODE.i_atime = time(0L);
+    minode->INODE.i_mtime = minode->INODE.i_atime;
+    minode->INODE.i_size = 0;
+    minode->dirty = 1;
     return 1;
 }
 
@@ -232,7 +248,6 @@ int close_file(int fileDescriptor) {
     }
     MINODE * closedMInode = openedFileTable->mptr;
     int refCount = openedFileTable->refCount;
-    closedMInode->mounted = -1;
 
     openedFileTable->mode = -1;
     openedFileTable->mptr = NULL;
@@ -240,6 +255,8 @@ int close_file(int fileDescriptor) {
     openedFileTable->refCount = 0;
 
     if (refCount == 0) {
+        printf("Closing Inode %d\n", closedMInode->ino);
+        closedMInode->mounted = -1;
         iput(closedMInode);
     }
     return 1;
