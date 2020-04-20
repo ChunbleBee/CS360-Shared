@@ -19,7 +19,9 @@ int tryWrite(int fileDesc, u8 * buffer, u32 bytesProvided) {
 
 int writeToFile(OFT * file, u8 * writeBuffer, u32 bytesProvided) {
     MINODE * fileMInode = file->mptr;
-    u8 blockBuffer[BLKSIZE];
+    u8 blockBuffer[BLKSIZE + 1];
+    int * iBuffer = (int *) blockBuffer;
+    blockBuffer[BLKSIZE] = 0;
     int bytesWrote = 0;
     while (bytesProvided > 0) {
         int logicalBlock = file->offset / BLKSIZE;
@@ -39,10 +41,11 @@ int writeToFile(OFT * file, u8 * writeBuffer, u32 bytesProvided) {
                     fileMInode->INODE.i_block[logicalBlock], logicalBlock);
                 fileMInode->INODE.i_blocks += 2;
                 fileMInode->dirty = 1;
+                fileMInode->INODE.i_blocks += 2;
             }
+
             physicalBlock = fileMInode->INODE.i_block[logicalBlock];
-        } else if (logicalBlock < 256 + 12) {
-            int * iBuffer = (int *) blockBuffer;
+        } else if ((logicalBlock < (256 + 12)) && logicalBlock >= 12) {
             if (fileMInode->INODE.i_block[12] == 0) {
                 fileMInode->INODE.i_block[12] = balloc(fileMInode->dev);
                 if (fileMInode->INODE.i_block[12] == 0) {
@@ -53,9 +56,10 @@ int writeToFile(OFT * file, u8 * writeBuffer, u32 bytesProvided) {
                     fileMInode->INODE.i_block[12]);
                 fileMInode->INODE.i_blocks += 2;
                 fileMInode->dirty = 1;
+                fileMInode->INODE.i_blocks += 2;
             }
-            get_block(fileMInode->dev, fileMInode->INODE.i_block[12],
-                (u8 *) iBuffer);
+            printf("In single indirect. Searching for logical block: %d\n", logicalBlock);
+            get_block(fileMInode->dev, fileMInode->INODE.i_block[12], ((u8 *) iBuffer));
             if (iBuffer[logicalBlock - 12] == 0) {
                 iBuffer[logicalBlock - 12] = balloc(fileMInode->dev);
                 if (iBuffer[logicalBlock - 12] == 0) {
@@ -70,9 +74,9 @@ int writeToFile(OFT * file, u8 * writeBuffer, u32 bytesProvided) {
                 put_block(fileMInode->dev, fileMInode->INODE.i_block[12],
                     (u8 *) iBuffer);
             }
-            physicalBlock = iBuffer[logicalBlock - 12];
-        } else if (logicalBlock < 256*256 + 256 + 12) {
-            int * iBuffer = (int *) blockBuffer;
+            physicalBlock = iBuffer[(logicalBlock - 12)];
+
+        } else if (logicalBlock < 65804) {
             if (fileMInode->INODE.i_block[13] == 0) {
                 fileMInode->INODE.i_block[13] = balloc(fileMInode->dev);
                 if (fileMInode->INODE.i_block[13] == 0) {
@@ -86,6 +90,7 @@ int writeToFile(OFT * file, u8 * writeBuffer, u32 bytesProvided) {
             }
             get_block(fileMInode->dev, fileMInode->INODE.i_block[13],
                 (u8 *) iBuffer);
+            printf("In double indirect. Searching for logical block: %d\n", logicalBlock);
             if (iBuffer[(logicalBlock - 256 - 12) / 256] == 0) {
                 iBuffer[(logicalBlock - 256 - 12) / 256] =
                     balloc(fileMInode->dev);
@@ -101,6 +106,9 @@ int writeToFile(OFT * file, u8 * writeBuffer, u32 bytesProvided) {
                 fileMInode->dirty = 1;
                 put_block(fileMInode->dev, fileMInode->INODE.i_block[13],
                     (u8 *) iBuffer);
+                    
+                fileMInode->INODE.i_blocks += 2;
+                fileMInode->dirty = 1;
             }
             int iBlock = iBuffer[(logicalBlock - 256 - 12) / 256];
             get_block(fileMInode->dev, iBlock, (u8 *) iBuffer);
@@ -119,6 +127,8 @@ int writeToFile(OFT * file, u8 * writeBuffer, u32 bytesProvided) {
                 fileMInode->INODE.i_blocks += 2;
                 fileMInode->dirty = 1;
                 put_block(fileMInode->dev, iBlock, (u8 *) iBuffer);
+                fileMInode->INODE.i_blocks += 2;
+                fileMInode->dirty = 1;
             }
             physicalBlock = iBuffer[(logicalBlock - 256 - 12) % 256];
         } else {
@@ -133,7 +143,6 @@ int writeToFile(OFT * file, u8 * writeBuffer, u32 bytesProvided) {
         
         bytesWrote += numBytesToWrite;
         bytesProvided -= numBytesToWrite;
-        remainingBytesInBlock -= numBytesToWrite; // unused - reset in next loop
         file->offset += numBytesToWrite;
         if (file->offset > fileMInode->INODE.i_size) {
             fileMInode->INODE.i_size = file->offset;
@@ -171,6 +180,7 @@ int tryCopy(char * sourcePath, char * destPath) {
     int totalBytesWritten = 0;
     int numBytes = tryRead(sourceFD, buffer, BLKSIZE);
     while (numBytes > 0) {
+        totalWrites++;
         tryWrite(destFD, buffer, numBytes);
         totalBytesWritten += numBytes;
         printf("= = = = wrote %d bytes from %s to %s : = = = =\n",
@@ -184,6 +194,7 @@ int tryCopy(char * sourcePath, char * destPath) {
     printf("Wrote to byte number %d\n", running->fd[destFD]->offset);
     printBlockList(running->fd[destFD]->mptr);
     close_file(destFD);
+    // cat(destPath);
     close_file(sourceFD);
     return 1;
 }

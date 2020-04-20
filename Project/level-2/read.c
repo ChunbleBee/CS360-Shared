@@ -32,7 +32,7 @@ int readFromFile(OFT * file, u8 readBuffer[], u32 bytesRequested) {
             get_block(fileMInode->dev, fileMInode->INODE.i_block[12], 
                 (u8 *) iBuffer);
             physicalBlock = iBuffer[logicalBlock - 12];
-        } else if (logicalBlock < 256*256 + 256 + 12) {
+        } else if (logicalBlock < 65804) {
             int * iBuffer = (int *) blockBuffer;
             get_block(fileMInode->dev, fileMInode->INODE.i_block[13],
                 (u8 *) iBuffer);
@@ -49,6 +49,7 @@ int readFromFile(OFT * file, u8 readBuffer[], u32 bytesRequested) {
             availableBytes,
             remainingBytesInBlock),
             bytesRequested);
+        printf("Reading %d bytes from logical block: %d, physical block: %d\n", numBytesToRead, logicalBlock, physicalBlock);
         memcpy(readBuffer, &(blockBuffer[startingByte]), numBytesToRead);
         bytesRead += numBytesToRead;
         availableBytes -= numBytesToRead;
