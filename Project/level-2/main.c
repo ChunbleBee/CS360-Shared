@@ -140,7 +140,7 @@ int main(int argc, char *argv[ ]) {
     while(1) {
         printf("input command : [ ls | cd | pwd | mkdir | creat | rmdir\n");
         printf("                | link | unlink | symlink | readlink | quit |\n");
-        printf("                | cat | write | append] $> ");
+        printf("                | cat | write | append | cp ] $> ");
         fgets(line, 128, stdin);
         line[strlen(line)-1] = '\0';
 
@@ -212,6 +212,8 @@ int main(int argc, char *argv[ ]) {
             printf("writebuffer: %s\n", writebuffer);
             tryWrite(fileDesc, writebuffer, strlen(writebuffer));
             close_file(fileDesc);
+        } else if (strcmp(cmd, "cp") == 0) {
+            tryCopy(pathname, pathname2);
         } else printf("no command, cmd: %s", cmd);
     }
 }

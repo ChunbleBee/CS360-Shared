@@ -22,6 +22,13 @@ DIR   *dp;
 #define NPROC       2
 #define NOFT (NFD * NPROC)
 
+#define READ_MODE 0
+#define WRITE_MODE 1
+#define READ_WRITE_MODE 2
+#define APPEND_MODE 3
+
+
+
 typedef struct minode {
   INODE INODE;
   int dev, ino;

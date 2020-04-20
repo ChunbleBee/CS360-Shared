@@ -1,8 +1,3 @@
-#define READ_MODE 0
-#define WRITE_MODE 1
-#define READ_WRITE_MODE 2
-#define APPEND_MODE 3
-
 int open_file(char * filename, int mode) {
     if (mode < 0 || mode > 3) {
         printf("Error: open mode %d is not defined\n", mode);
