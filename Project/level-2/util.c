@@ -243,7 +243,7 @@ int ialloc(int dev)  {
         if (tst_bit(buf, i)==0) {
             set_bit(buf, i);
             put_block(dev, imap, buf);
-            printf("allocated ino = %d\n", i+1); // bits count from 0; ino from 1
+            printf("allocated ino = %d\n", i+1); //bits count from 0; ino from 1
             sp->s_free_inodes_count--;
             gp->bg_free_inodes_count--;
             return i+1;

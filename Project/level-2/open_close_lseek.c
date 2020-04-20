@@ -1,8 +1,3 @@
-#define READ_MODE 0
-#define WRITE_MODE 1
-#define READ_WRITE_MODE 2
-#define APPEND_MODE 3
-
 int open_file(char * filename, int mode) {
     if (mode < 0 || mode > 3) {
         printf("Error: open mode %d is not defined\n", mode);
@@ -47,7 +42,8 @@ int open_file(char * filename, int mode) {
             return -2;
         }
     }
-    if ((mode == WRITE_MODE) || (mode == READ_WRITE_MODE) || (mode == APPEND_MODE)) {
+    if ((mode == WRITE_MODE) || (mode == READ_WRITE_MODE) ||
+        (mode == APPEND_MODE)) {
         if ( (running->uid == 0) || // super user
             ((mountedINode->INODE.i_mode & 0200) &&
                 (running->uid == mountedINode->INODE.i_uid)) || // user write
@@ -67,7 +63,8 @@ int open_file(char * filename, int mode) {
     int multiread = 0;
     if (mountedINode->mounted < 0) { // not in use
         printf("%s is not already open\n", filename);
-    } else if((mountedINode->mounted == READ_MODE) && (mode == READ_MODE)) { // open for reading only
+    } else if((mountedINode->mounted == READ_MODE) &&
+        (mode == READ_MODE)) { // open for reading only
         multiread = 1;
         printf("%s is already open for reading\n", filename);
     } else {
@@ -98,7 +95,8 @@ int open_file(char * filename, int mode) {
         }
     }
     if (openedFileTable == NULL) {
-        printf("The kernel screams in abject terror at this occurence.\nError: process has too many files open.\n");
+        printf("The kernel screams in abject terror at this occurence.\n");
+        printf("Error: process has too many files open.\n");
         iput(mountedINode);
         return -5;
     }
@@ -122,6 +120,7 @@ int open_file(char * filename, int mode) {
         openedFileTable->refCount = 1;
     }
     openedFileTable->offset = (mode == 3) ? mountedINode->INODE.i_size : 0;
+    printf("opened file table offset: %d\n", openedFileTable->offset);
     if (mode == WRITE_MODE) {
         printf("truncating file: %s\n", filename);
         truncate(mountedINode);
@@ -181,7 +180,7 @@ int truncate(MINODE * mountedINode) {
             printf("% 5d ", iBlocksBuffer[i - 12]);
             bdalloc(mountedINode->dev, iBlocksBuffer[i - 12]);
         }
-        printf("\nfreeing indirect blockmap block:% 5d \n", pInode->i_block[12]);
+        printf("\nfreeing indirect blockmap block:% 5d \n",pInode->i_block[12]);
         bdalloc(mountedINode->dev, pInode->i_block[12]);
     }
     if (i < numBlocks) { // i == 256 + 12, there are double indirect blocks
@@ -192,16 +191,17 @@ int truncate(MINODE * mountedINode) {
             if (i == numBlocks) {
                 break;
             }
-            get_block(mountedINode->dev, dBlocksBuffer[d], (u8 *) iBlocksBuffer);
+            get_block(mountedINode->dev, dBlocksBuffer[d], (u8 *)iBlocksBuffer);
             for (; i < numBlocks; i++) {
                 if ((i - 12 - 256) % 8 == 0) printf("\n    ");
                 printf("% 5d ", iBlocksBuffer[i - (d*256) - 256 - 12]);
-                bdalloc(mountedINode->dev, iBlocksBuffer[i - (d*256) - 256 - 12]);
+                bdalloc(mountedINode->dev, iBlocksBuffer[i - (d*256)-256-12]);
             }
-            printf("\nfreeing indirect blockmap block:% 5d \n", dBlocksBuffer[d]);
+            printf("\nfreeing indirect blockmap block:% 5d\n",dBlocksBuffer[d]);
             bdalloc(mountedINode->dev, dBlocksBuffer[d]);
         }
-        printf("freeing double indirect blockmap block:% 5d \n", pInode->i_block[13]);
+        printf("freeing double indirect blockmap block:% 5d \n",
+            pInode->i_block[13]);
         bdalloc(mountedINode->dev, pInode->i_block[13]);
     }
     mountedINode->INODE.i_atime = time(0L);
@@ -231,6 +231,7 @@ int close_file(int fileDescriptor) {
     }
     MINODE * closedMInode = openedFileTable->mptr;
     int refCount = openedFileTable->refCount;
+    closedMInode->mounted = -1;
 
     openedFileTable->mode = -1;
     openedFileTable->mptr = NULL;

@@ -31,7 +31,8 @@ int symlink(char * oldPath, char * newPath) {
                 }
                 int newInodeNum = getino(newPath);
                 MINODE * newMInode = iget(dev, newInodeNum);
-                newMInode->INODE.i_mode = 0120000 | (oldChildMInode->INODE.i_mode & 0777);
+                newMInode->INODE.i_mode = 0120000 |
+                    (oldChildMInode->INODE.i_mode & 0777);
                 strcpy(((char *) &(newMInode->INODE.i_block[0])), oldPathCopy2);
                 newMInode->INODE.i_size = strlen(oldPathCopy2);
                 newMInode->dirty = 1;

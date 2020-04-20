@@ -197,7 +197,8 @@ int enter_name(MINODE * parentInode, int childInodeNum, char * childName) {
         }
     }
     printf("Allocating new data block...\n");
-    //Reach here, no remaining blocks. Increment number of blocks by 1 and allocate a enw data block
+    //Reach here, no remaining blocks.
+    //Increment number of blocks by 1 and allocate a enw data block
     int allocatedBlock = balloc(parentInode->dev);
     parentInode->INODE.i_blocks++;
     parentInode->INODE.i_block[i] = allocatedBlock;

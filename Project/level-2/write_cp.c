@@ -2,8 +2,7 @@ int tryWrite(int fileDesc, u8 buffer[], u32 bytesProvided);
 int writeToFile(OFT * file, u8 writeBuffer[], u32 bytesProvided);
 int tryCopy(char * source, char * destination);
 int copyFile(OFT * source, OFT * destination);
-int tryMove(char * source, char * destination);
-int moveFile(OFT * source, OFT * destination);
+int tryCopy(char * source, char * destination);
 
 int tryWrite(int fileDesc, u8 buffer[], u32 bytesProvided) {
     if (running->fd[fileDesc] == NULL) {
@@ -13,8 +12,7 @@ int tryWrite(int fileDesc, u8 buffer[], u32 bytesProvided) {
 
     OFT * file = running->fd[fileDesc];
 
-    if (file->mode != WRITE_MODE && file->mode != READ_WRITE_MODE &&
-        file->mode != APPEND_MODE) {
+    if (file->mode == READ_MODE) {
         printf("Error: file not opened in write mode!\n");
         return -2;
     }
@@ -66,30 +64,39 @@ int writeToFile(OFT * file, u8 writeBuffer[], u32 bytesProvided) {
                     (u8 *) indirectBlockBuffer);
             }
         } else if (logicalBlock >= 268 && logicalBlock < 65804) {
+            printf("268 >= inode > 65048\n");
             u32 indirectBlockBuffer[256];
             u32 doubleIndirectBlockBuffer[256];
 
             if (fileMInode->INODE.i_block[13] == 0) {
                 fileMInode->INODE.i_block[13] = balloc(fileMInode->dev);
             }
-            get_block(fileMInode->dev, fileMInode->INODE.i_block[13], (u8 *) indirectBlockBuffer);
+            get_block(fileMInode->dev, fileMInode->INODE.i_block[13],
+                (u8 *) indirectBlockBuffer);
             if (indirectBlockBuffer[(logicalBlock - 268) / 256] == 0) {
-                indirectBlockBuffer[(logicalBlock - 268) / 256] = balloc(fileMInode->dev);
-                put_block(fileMInode->dev, fileMInode->INODE.i_block[13],  (u8 *) indirectBlockBuffer);
+                indirectBlockBuffer[(logicalBlock - 268) / 256] =
+                    balloc(fileMInode->dev);
+                put_block(fileMInode->dev, fileMInode->INODE.i_block[13],
+                    (u8 *) indirectBlockBuffer);
             }
-            get_block(fileMInode->dev, indirectBlockBuffer[(logicalBlock - 268) / 256], (u8 *) doubleIndirectBlockBuffer);
+            get_block(fileMInode->dev, indirectBlockBuffer[
+                (logicalBlock - 268) / 256], (u8 *) doubleIndirectBlockBuffer);
             if (doubleIndirectBlockBuffer[(logicalBlock - 268) % 256] == 0) {
-                doubleIndirectBlockBuffer[(logicalBlock - 268) % 256] = balloc(fileMInode->dev);
+                doubleIndirectBlockBuffer[(logicalBlock - 268) % 256] =
+                    balloc(fileMInode->dev);
             }
-            physicalBlock = doubleIndirectBlockBuffer[(logicalBlock - 268) % 256];
+            physicalBlock =
+                doubleIndirectBlockBuffer[(logicalBlock - 268) % 256];
         } else {
-            printf("Damn it, Jim - we can't handle Triple-Indirect Blocks yet!!!\n");
+            printf(
+              "Damn it, Jim - we can't handle Triple-Indirect Blocks yet!!!\n");
             return -1;
         }
 
         get_block(fileMInode->dev, physicalBlock, blockBuffer);
         int numBytesToWrite = min(remainingBytesInBlock, bytesProvided);
-        memcpy(&(blockBuffer[startingByte]), &(writeBuffer[bytesWrote]), numBytesToWrite);
+        memcpy(&(blockBuffer[startingByte]), &(writeBuffer[bytesWrote]), 
+            numBytesToWrite);
         bytesWrote += numBytesToWrite;
         bytesProvided -= numBytesToWrite;
         remainingBytesInBlock -= numBytesToWrite;
@@ -97,6 +104,32 @@ int writeToFile(OFT * file, u8 writeBuffer[], u32 bytesProvided) {
         put_block(fileMInode->dev, physicalBlock, blockBuffer);
         
     }
+    fileINode->INODE.i_size = fileINode->INODE.i_size += bytesInBuffer;
+    printf("Total bytes wrote: %d, total bytes in buffer: %d\n",
+        totBytesWrote, bytesInBuffer);
+    return totBytesWrote;
+}
 
-    return bytesWrote;
+int tryCopy(char * sourcePath, char * destPath) {
+    int sourceFD = open_file(sourcePath, READ_MODE);
+
+    if (sourceFD >= 0) {
+        if (tryCreate(destPath) == 1) {
+            int destFD = open_file(destPath, WRITE_MODE);
+
+            if (destFD >= 0) {
+                u8 buffer[BLKSIZE];
+                int numBytes = tryRead(sourceFD, buffer, BLKSIZE);
+
+                while (numBytes > 0) {
+                    tryWrite(destFD, buffer, numBytes);
+                    numBytes = tryRead(sourceFD, buffer, BLKSIZE);
+                }
+
+                close_file(destFD);
+            }
+        }
+
+        close_file(sourceFD);
+    }
 }
