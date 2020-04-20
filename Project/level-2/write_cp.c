@@ -180,7 +180,6 @@ int tryCopy(char * sourcePath, char * destPath) {
     int totalBytesWritten = 0;
     int numBytes = tryRead(sourceFD, buffer, BLKSIZE);
     while (numBytes > 0) {
-        totalWrites++;
         tryWrite(destFD, buffer, numBytes);
         totalBytesWritten += numBytes;
         printf("= = = = wrote %d bytes from %s to %s : = = = =\n",
