@@ -1,0 +1,98 @@
+               CS360 Project Level-1 DEMO RECORD 
+
+
+Team Member Names IDs__Makiah Heinzmann 11442136__, __Taiya Williams 11644614__
+
+ 
+                            Check List
+
+     Commands            Expected Results         Observed Results
+-------------------  ----------------------- --------------------------
+1. startup (with an EMPTY diskiamge)
+   ls:              Show contents of / DIR    _________________________
+      dwrxw-xw-x   3   0   0  Apr  9 18:05:18 2020     1024    .
+      dwrxw-xw-x   3   0   0  Apr  9 18:05:18 2020     1024    ..
+      dwrx------   2   0   0  Apr  9 18:05:18 2020    12288    lost+found
+
+2. mkdir dir1;
+   ls:              Show /dir1 exists         _________________________
+      dwrxw-xw-x   4   0   0  Apr  9 18:05:18 2020     1024    .
+      dwrxw-xw-x   4   0   0  Apr  9 18:05:18 2020     1024    ..
+      dwrx------   2   0   0  Apr  9 18:05:18 2020    12288    lost+found
+      dwrxw-xw-x   2   0   0  Apr  9 18:07:28 2020     1024    dir1
+
+   mkdir dir2;
+   ls:              Show /dir1, /dir2 exist   _________________________
+      dwrxw-xw-x   5   0   0  Apr  9 18:05:18 2020     1024    .
+      dwrxw-xw-x   5   0   0  Apr  9 18:05:18 2020     1024    ..
+      dwrx------   2   0   0  Apr  9 18:05:18 2020    12288    lost+found
+      dwrxw-xw-x   2   0   0  Apr  9 18:07:28 2020     1024    dir1
+      dwrxw-xw-x   2   0   0  Apr  9 18:08:06 2020     1024    dir2
+
+3. mkdir dir1/dir3 
+   ls dir1:         Show dir3 in dir1/        _________________________
+      dwrxw-xw-x   3   0   0  Apr  9 18:07:28 2020     1024    .
+      dwrxw-xw-x   5   0   0  Apr  9 18:05:18 2020     1024    ..
+      dwrxw-xw-x   2   0   0  Apr  9 18:08:39 2020     1024    dir3
+
+4. creat file1
+   ls:              Show /file1 exists        _________________________
+      dwrxw-xw-x   5   0   0  Apr  9 18:05:18 2020     1024    .
+      dwrxw-xw-x   5   0   0  Apr  9 18:05:18 2020     1024    ..
+      dwrx------   2   0   0  Apr  9 18:05:18 2020    12288    lost+found
+      dwrxw-xw-x   3   0   0  Apr  9 18:07:28 2020     1024    dir1
+      dwrxw-xw-x   2   0   0  Apr  9 18:08:06 2020     1024    dir2
+      -wr-w--w--   1   0   0  Apr  9 18:09:19 2020        0    file1
+
+5. rmdir dir1       REJECT (dir1 not empty)   _________________________
+      Error: failed to remove directory './dir1'
+      rmdir dir1 failed
+   ls:
+      dwrxw-xw-x   5   0   0  Apr  9 18:05:18 2020     1024    .
+      dwrxw-xw-x   5   0   0  Apr  9 18:05:18 2020     1024    ..
+      dwrx------   2   0   0  Apr  9 18:05:18 2020    12288    lost+found
+      dwrxw-xw-x   3   0   0  Apr  9 18:07:28 2020     1024    dir1
+      dwrxw-xw-x   2   0   0  Apr  9 18:08:06 2020     1024    dir2
+      -wr-w--w--   1   0   0  Apr  9 18:09:19 2020        0    file1
+
+6. rmdir dir2
+   ls:              Show dir2 is removed      _________________________
+      dwrxw-xw-x   5   0   0  Apr  9 18:05:18 2020     1024    .
+      dwrxw-xw-x   5   0   0  Apr  9 18:05:18 2020     1024    ..
+      dwrx------   2   0   0  Apr  9 18:05:18 2020    12288    lost+found
+      dwrxw-xw-x   3   0   0  Apr  9 18:07:28 2020     1024    dir1
+      -wr-w--w--   1   0   0  Apr  9 18:09:19 2020        0    file1
+
+7. link file1 A;
+   ls:              file1,A same ino,  LINK=2 _________________________
+      dwrxw-xw-x   5   0   0  Apr  9 18:05:18 2020     1024    .
+      dwrxw-xw-x   5   0   0  Apr  9 18:05:18 2020     1024    ..
+      dwrx------   2   0   0  Apr  9 18:05:18 2020    12288    lost+found
+      dwrxw-xw-x   3   0   0  Apr  9 18:07:28 2020     1024    dir1
+      -wr-w--w--   2   0   0  Apr  9 18:09:19 2020        0    file1
+      -wr-w--w--   2   0   0  Apr  9 18:09:19 2020        0    A
+
+8. unlink A; 
+   ls:              A deleted, file1's LINK=1 _________________________ 
+      dwrxw-xw-x   5   0   0  Apr  9 18:05:18 2020     1024    .
+      dwrxw-xw-x   5   0   0  Apr  9 18:05:18 2020     1024    ..
+      dwrx------   2   0   0  Apr  9 18:05:18 2020    12288    lost+found
+      dwrxw-xw-x   3   0   0  Apr  9 18:07:28 2020     1024    dir1
+      -wr-w--w--   1   0   0  Apr  9 18:09:19 2020        0    file1
+
+9. symlink file1 B
+   ls:              Must show      B->file1   _________________________
+      dwrxw-xw-x   5   0   0  Apr  9 18:05:18 2020     1024    .
+      dwrxw-xw-x   5   0   0  Apr  9 18:05:18 2020     1024    ..
+      dwrx------   2   0   0  Apr  9 18:05:18 2020    12288    lost+found
+      dwrxw-xw-x   3   0   0  Apr  9 18:07:28 2020     1024    dir1
+      -wr-w--w--   1   0   0  Apr  9 18:09:19 2020        0    file1
+      lwr-w--w--   1   0   0  Apr  9 18:23:49 2020        5    B -> file1
+
+10.unlink file1 
+   ls:              file1 deleted, B->file1   _________________________
+      dwrxw-xw-x   5   0   0  Apr  9 18:05:18 2020     1024    .
+      dwrxw-xw-x   5   0   0  Apr  9 18:05:18 2020     1024    ..
+      dwrx------   2   0   0  Apr  9 18:05:18 2020    12288    lost+found
+      dwrxw-xw-x   3   0   0  Apr  9 18:07:28 2020     1024    dir1
+      lwr-w--w--   1   0   0  Apr  9 18:23:49 2020        5    B -> file1
