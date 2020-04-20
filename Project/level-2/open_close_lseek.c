@@ -12,7 +12,7 @@ int open_file(char * filename, int mode) {
     if (inodeNum == 0) {
         char filenameCopy[128];
         strcpy(filenameCopy, filename);
-        createFile(running->cwd, filenameCopy);
+        tryCreate(filenameCopy);
         inodeNum = getino(filename);
     }
     MINODE * mountedINode = iget(dev, inodeNum);
@@ -119,7 +119,8 @@ int open_file(char * filename, int mode) {
     } else {
         openedFileTable->refCount = 1;
     }
-    openedFileTable->offset = (mode == 3) ? mountedINode->INODE.i_size : 0;
+    openedFileTable->offset = (mode == APPEND_MODE) ?
+        mountedINode->INODE.i_size : 0;
     printf("opened file table offset: %d\n", openedFileTable->offset);
     if (mode == WRITE_MODE) {
         printf("truncating file: %s\n", filename);
@@ -253,7 +254,9 @@ int lseek_file(int fileDescriptor, int position) {
         printf("file descriptor %d is not in use\n", fileDescriptor);
         return -2;
     }
-    if (position < 0 || position >= running->fd[fileDescriptor]->mptr->INODE.i_size){
+    if (position < 0 || position >=
+        running->fd[fileDescriptor]->mptr->INODE.i_size
+        ) {
         printf("posision %d is out of range\n", position);
         return -3;
     }

@@ -41,6 +41,7 @@ int writeToFile(OFT * file, u8 writeBuffer[], u32 bytesProvided) {
                     printf("Write error: disk full\n");
                     return -12;
                 }
+                fileMInode->dirty = 1;
             }
             physicalBlock = fileMInode->INODE.i_block[logicalBlock];
         } else if (logicalBlock < 256 + 12) {
@@ -51,6 +52,7 @@ int writeToFile(OFT * file, u8 writeBuffer[], u32 bytesProvided) {
                     printf("Write error: disk full\n");
                     return -12;
                 }
+                fileMInode->dirty = 1;
             }
             get_block(fileMInode->dev, fileMInode->INODE.i_block[12],
                 (u8 *) iBuffer);
@@ -61,32 +63,43 @@ int writeToFile(OFT * file, u8 writeBuffer[], u32 bytesProvided) {
                     return -12;
                 }
                 put_block(fileMInode->dev, fileMInode->INODE.i_block[12],
-                    (u8 *) indirectBlockBuffer);
+                    (u8 *) iBuffer);
             }
-        } else if (logicalBlock >= 268 && logicalBlock < 65804) {
-            printf("268 >= inode > 65048\n");
-            u32 indirectBlockBuffer[256];
-            u32 doubleIndirectBlockBuffer[256];
-
+            physicalBlock = iBuffer[logicalBlock - 12];
+        } else if (logicalBlock < 256*256 + 256 + 12) {
+            int * iBuffer = (int *) blockBuffer;
             if (fileMInode->INODE.i_block[13] == 0) {
                 fileMInode->INODE.i_block[13] = balloc(fileMInode->dev);
+                if (fileMInode->INODE.i_block[12] == 0) {
+                    printf("Write error: disk full\n");
+                    return -12;
+                }
+                fileMInode->dirty = 1;
             }
             get_block(fileMInode->dev, fileMInode->INODE.i_block[13],
-                (u8 *) indirectBlockBuffer);
-            if (indirectBlockBuffer[(logicalBlock - 268) / 256] == 0) {
-                indirectBlockBuffer[(logicalBlock - 268) / 256] =
+                (u8 *) iBuffer);
+            if (iBuffer[(logicalBlock - 256 - 12) / 256] == 0) {
+                iBuffer[(logicalBlock - 256 - 12) / 256] =
                     balloc(fileMInode->dev);
+                if (iBuffer[(logicalBlock - 256 - 12) / 256] == 0) {
+                    printf("Write error: disk full\n");
+                    return -12;
+                }
                 put_block(fileMInode->dev, fileMInode->INODE.i_block[13],
-                    (u8 *) indirectBlockBuffer);
+                    (u8 *) iBuffer);
             }
-            get_block(fileMInode->dev, indirectBlockBuffer[
-                (logicalBlock - 268) / 256], (u8 *) doubleIndirectBlockBuffer);
-            if (doubleIndirectBlockBuffer[(logicalBlock - 268) % 256] == 0) {
-                doubleIndirectBlockBuffer[(logicalBlock - 268) % 256] =
+            int iBlock = iBuffer[(logicalBlock - 12) / 256];
+            get_block(fileMInode->dev, iBlock, (u8 *) iBuffer);
+            if (iBuffer[(logicalBlock - 256 - 12) % 256] == 0) {
+                iBuffer[(logicalBlock - 256 - 12) % 256] =
                     balloc(fileMInode->dev);
+                if (iBuffer[(logicalBlock - 256 - 12) % 256] == 0) {
+                    printf("Write error: disk full/n");
+                    return -12;
+                }
+                put_block(fileMInode->dev, iBlock, (u8 *) iBuffer);
             }
-            physicalBlock =
-                doubleIndirectBlockBuffer[(logicalBlock - 268) % 256];
+            physicalBlock = iBuffer[(logicalBlock - 256 - 12) % 256];
         } else {
             printf(
               "Damn it, Jim - we can't handle Triple-Indirect Blocks yet!!!\n");
@@ -99,37 +112,48 @@ int writeToFile(OFT * file, u8 writeBuffer[], u32 bytesProvided) {
             numBytesToWrite);
         bytesWrote += numBytesToWrite;
         bytesProvided -= numBytesToWrite;
-        remainingBytesInBlock -= numBytesToWrite;
+        remainingBytesInBlock -= numBytesToWrite; // unused - reset in next loop
         file->offset += numBytesToWrite;
+        if (file->offset > fileMInode->INODE.i_size) {
+            fileMInode->INODE.i_size = file->offset;
+            fileMInode->dirty = 1;
+        }
         put_block(fileMInode->dev, physicalBlock, blockBuffer);
-        
     }
-    fileINode->INODE.i_size = fileINode->INODE.i_size += bytesInBuffer;
-    printf("Total bytes wrote: %d, total bytes in buffer: %d\n",
-        totBytesWrote, bytesInBuffer);
-    return totBytesWrote;
+    printf("Wrote: %d total bytes\n", bytesWrote);
+    return bytesWrote;
 }
 
 int tryCopy(char * sourcePath, char * destPath) {
-    int sourceFD = open_file(sourcePath, READ_MODE);
-
-    if (sourceFD >= 0) {
-        if (tryCreate(destPath) == 1) {
-            int destFD = open_file(destPath, WRITE_MODE);
-
-            if (destFD >= 0) {
-                u8 buffer[BLKSIZE];
-                int numBytes = tryRead(sourceFD, buffer, BLKSIZE);
-
-                while (numBytes > 0) {
-                    tryWrite(destFD, buffer, numBytes);
-                    numBytes = tryRead(sourceFD, buffer, BLKSIZE);
-                }
-
-                close_file(destFD);
-            }
-        }
-
-        close_file(sourceFD);
+    if (sourcePath[0] == '/') {
+        dev = root->dev;
+    } else {
+        dev = running->cwd->dev;
     }
+    int inodeNum = getino(sourcePath);
+    int sourceFD;
+    if (inodeNum == 0) {
+        printf("copy failed: %s not found\n", sourcePath);
+        return -3;
+    }  
+    sourceFD = open_file(sourcePath, READ_MODE);
+    if (sourceFD < 0) {
+        printf("copy failed to open %s\n", sourcePath);
+        return -1;
+    }
+    int destFD = open_file(destPath, WRITE_MODE);
+    if (destFD < 0) {
+        printf("copy failed to open %s\n", destPath);
+        close_file(sourceFD);
+        return -2;
+    }
+    u8 buffer[BLKSIZE];
+    int numBytes = tryRead(sourceFD, buffer, BLKSIZE);
+    while (numBytes > 0) {
+        tryWrite(destFD, buffer, numBytes);
+        numBytes = tryRead(sourceFD, buffer, BLKSIZE);
+    }
+    close_file(destFD);
+    close_file(sourceFD);
+    return 1;
 }

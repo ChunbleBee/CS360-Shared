@@ -28,7 +28,9 @@ int readFromFile(OFT * file, u8 readBuffer[], u32 bytesRequested) {
         int logicalBlock = file->offset / BLKSIZE;
         int startingByte = file->offset % BLKSIZE;
         int remainingBytesInBlock = BLKSIZE - startingByte;
-        int physicalBlock; // int physicalBlock = logicalBlock;
+        int physicalBlock;
+        
+        // int physicalBlock = logicalBlock;
 
         if (logicalBlock < 12) {
             physicalBlock = fileMInode->INODE.i_block[logicalBlock];
@@ -42,8 +44,7 @@ int readFromFile(OFT * file, u8 readBuffer[], u32 bytesRequested) {
             get_block(fileMInode->dev, fileMInode->INODE.i_block[13],
                 (u8 *) iBuffer);
             int iBlock = iBuffer[(logicalBlock - 256 - 12) / 256];
-            get_block(fileMInode->dev, iBlock,
-                (u8 *) iBuffer);
+            get_block(fileMInode->dev, iBlock, (u8 *) iBuffer);
             physicalBlock = iBuffer[(logicalBlock - 256 - 12) % 256];
         } else {
             printf("Error: File size out of bounds!!! D:\n");
@@ -90,7 +91,7 @@ void cat(char * name) {
 
         while (bytesRead > 0) {
             buffer[bytesRead] = '\0';
-            puts(buffer);
+            printf("%s", buffer);
             bytesRead = tryRead(fileDesc, buffer, BLKSIZE);
         }
 
