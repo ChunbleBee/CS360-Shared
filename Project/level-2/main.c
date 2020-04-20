@@ -94,7 +94,7 @@ char *disk = "diskimage";
 int main(int argc, char *argv[ ]) {
     int ino;
     char spbuf[BLKSIZE], gpbuf[BLKSIZE];
-    char line[128], cmd[32], pathname[128], pathname2[128];
+    char line[2048], cmd[32], pathname[128], pathname2[2016];
     char * writebuffer;
   
     printf("checking EXT2 FS ....");
@@ -142,7 +142,7 @@ int main(int argc, char *argv[ ]) {
         printf(
             "                | link | unlink | symlink | readlink | quit |\n");
         printf("                | cat | write | append | cp ] $> ");
-        fgets(line, 128, stdin);
+        fgets(line, 2048, stdin);
         line[strlen(line)-1] = '\0';
 
         if (line[0] == '\0')

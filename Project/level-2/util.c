@@ -9,8 +9,8 @@ int get_block(int dev, int blk, u8 *buf)
 }
 int put_block(int dev, int blk, u8 *buf)
 {
-   lseek(dev, (long)blk*BLKSIZE, 0);
-   write(dev, buf, BLKSIZE);
+    lseek(dev, (long)blk*BLKSIZE, 0);
+    write(dev, buf, BLKSIZE);
 }   
 
 int tokenize(char *pathname)
@@ -320,7 +320,7 @@ int bdalloc(int device, int block) {
 int freeInodeAndBlocks(MINODE * mounted) {
     printf("freeing inode and data blocks of %d\n", mounted->ino);
     truncate(mounted);
-    printf("freeing inode: %d", mounted->ino);
+    printf("freeing inode: %d\n", mounted->ino);
     idalloc(mounted->dev, mounted->ino);
 }
 

@@ -22,7 +22,9 @@ int tryWrite(int fileDesc, u8 buffer[], u32 bytesProvided) {
 
 int writeToFile(OFT * file, u8 writeBuffer[], u32 bytesProvided) {
     MINODE * fileMInode = file->mptr;
-    u8 blockBuffer[BLKSIZE];
+    u8 blockBuffer[BLKSIZE + 1];
+    int * iBuffer = (int *) blockBuffer;
+    blockBuffer[BLKSIZE] = 0;
     int bytesWrote = 0;
 
     while (bytesProvided > 0) {
@@ -30,8 +32,6 @@ int writeToFile(OFT * file, u8 writeBuffer[], u32 bytesProvided) {
         int startingByte = file->offset % BLKSIZE;
         int remainingBytesInBlock = BLKSIZE - startingByte;
         int physicalBlock;
-
-        // int physicalBlock = logicalBlock;
 
         if (logicalBlock < 12) {
             if (fileMInode->INODE.i_block[logicalBlock] == 0) {
@@ -42,10 +42,11 @@ int writeToFile(OFT * file, u8 writeBuffer[], u32 bytesProvided) {
                     return -12;
                 }
                 fileMInode->dirty = 1;
+                fileMInode->INODE.i_blocks += 2;
             }
+
             physicalBlock = fileMInode->INODE.i_block[logicalBlock];
-        } else if (logicalBlock < 256 + 12) {
-            int * iBuffer = (int *) blockBuffer;
+        } else if ((logicalBlock < (256 + 12)) && logicalBlock >= 12) {
             if (fileMInode->INODE.i_block[12] == 0) {
                 fileMInode->INODE.i_block[12] = balloc(fileMInode->dev);
                 if (fileMInode->INODE.i_block[12] == 0) {
@@ -53,31 +54,35 @@ int writeToFile(OFT * file, u8 writeBuffer[], u32 bytesProvided) {
                     return -12;
                 }
                 fileMInode->dirty = 1;
+                fileMInode->INODE.i_blocks += 2;
             }
-            get_block(fileMInode->dev, fileMInode->INODE.i_block[12],
-                (u8 *) iBuffer);
+            printf("In single indirect. Searching for logical block: %d\n", logicalBlock);
+            get_block(fileMInode->dev, fileMInode->INODE.i_block[12], ((u8 *) iBuffer));
             if (iBuffer[logicalBlock - 12] == 0) {
                 iBuffer[logicalBlock - 12] = balloc(fileMInode->dev);
                 if (iBuffer[logicalBlock - 12] == 0) {
                     printf("Write error: disk full\n");
                     return -12;
                 }
-                put_block(fileMInode->dev, fileMInode->INODE.i_block[12],
-                    (u8 *) iBuffer);
+                put_block(fileMInode->dev, fileMInode->INODE.i_block[12], ((u8 *) iBuffer));
+                fileMInode->dirty = 1;
+                fileMInode->INODE.i_blocks += 2;
             }
-            physicalBlock = iBuffer[logicalBlock - 12];
-        } else if (logicalBlock < 256*256 + 256 + 12) {
-            int * iBuffer = (int *) blockBuffer;
+            physicalBlock = iBuffer[(logicalBlock - 12)];
+
+        } else if (logicalBlock < 65804) {
             if (fileMInode->INODE.i_block[13] == 0) {
                 fileMInode->INODE.i_block[13] = balloc(fileMInode->dev);
                 if (fileMInode->INODE.i_block[12] == 0) {
                     printf("Write error: disk full\n");
                     return -12;
                 }
+                fileMInode->INODE.i_blocks += 2;
                 fileMInode->dirty = 1;
             }
             get_block(fileMInode->dev, fileMInode->INODE.i_block[13],
                 (u8 *) iBuffer);
+            printf("In double indirect. Searching for logical block: %d\n", logicalBlock);
             if (iBuffer[(logicalBlock - 256 - 12) / 256] == 0) {
                 iBuffer[(logicalBlock - 256 - 12) / 256] =
                     balloc(fileMInode->dev);
@@ -87,6 +92,9 @@ int writeToFile(OFT * file, u8 writeBuffer[], u32 bytesProvided) {
                 }
                 put_block(fileMInode->dev, fileMInode->INODE.i_block[13],
                     (u8 *) iBuffer);
+                    
+                fileMInode->INODE.i_blocks += 2;
+                fileMInode->dirty = 1;
             }
             int iBlock = iBuffer[(logicalBlock - 12) / 256];
             get_block(fileMInode->dev, iBlock, (u8 *) iBuffer);
@@ -98,6 +106,8 @@ int writeToFile(OFT * file, u8 writeBuffer[], u32 bytesProvided) {
                     return -12;
                 }
                 put_block(fileMInode->dev, iBlock, (u8 *) iBuffer);
+                fileMInode->INODE.i_blocks += 2;
+                fileMInode->dirty = 1;
             }
             physicalBlock = iBuffer[(logicalBlock - 256 - 12) % 256];
         } else {
@@ -108,19 +118,24 @@ int writeToFile(OFT * file, u8 writeBuffer[], u32 bytesProvided) {
 
         get_block(fileMInode->dev, physicalBlock, blockBuffer);
         int numBytesToWrite = min(remainingBytesInBlock, bytesProvided);
-        memcpy(&(blockBuffer[startingByte]), &(writeBuffer[bytesWrote]), 
-            numBytesToWrite);
+        memcpy (
+            &(blockBuffer[startingByte]),
+            &(writeBuffer[bytesWrote]), 
+            numBytesToWrite
+        );
+        put_block(fileMInode->dev, physicalBlock, blockBuffer);
         bytesWrote += numBytesToWrite;
         bytesProvided -= numBytesToWrite;
-        remainingBytesInBlock -= numBytesToWrite; // unused - reset in next loop
         file->offset += numBytesToWrite;
-        if (file->offset > fileMInode->INODE.i_size) {
-            fileMInode->INODE.i_size = file->offset;
-            fileMInode->dirty = 1;
-        }
-        put_block(fileMInode->dev, physicalBlock, blockBuffer);
+        printf("Wrote %d bytes to logical block: %d, physical block: %d\n", numBytesToWrite, logicalBlock, physicalBlock);
+
+        //memcpy(blockBuffer, '\0', BLKSIZE + 1);
+        // get_block(fileMInode->dev, physicalBlock, blockBuffer);
+        // printf("%s\n\t\t\t\t\t\t-----------------------", blockBuffer);
     }
     printf("Wrote: %d total bytes\n", bytesWrote);
+    fileMInode->INODE.i_size += bytesWrote;
+    fileMInode->dirty = 1;
     return bytesWrote;
 }
 
@@ -147,13 +162,20 @@ int tryCopy(char * sourcePath, char * destPath) {
         close_file(sourceFD);
         return -2;
     }
-    u8 buffer[BLKSIZE];
+    u8 buffer[BLKSIZE + 1];
+    buffer[BLKSIZE] = 0;
+
+    int totalWrites = 0;
+    int totalReads = 0;
     int numBytes = tryRead(sourceFD, buffer, BLKSIZE);
     while (numBytes > 0) {
+        totalWrites++;
         tryWrite(destFD, buffer, numBytes);
         numBytes = tryRead(sourceFD, buffer, BLKSIZE);
     }
+    printf("Total writes: %d\n", totalWrites);
     close_file(destFD);
+    // cat(destPath);
     close_file(sourceFD);
     return 1;
 }
