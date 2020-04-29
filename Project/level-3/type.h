@@ -30,12 +30,13 @@ DIR   *dp;
 
 typedef struct mtable {
   int dev;
-  MINODE * mptr;
+  struct minode * mptr;
   char name[64];
   int ninodes;
   int nblocks;
   int imap;
   int bmap;
+  int inode_start;
 } MTABLE;
 
 typedef struct minode {
@@ -44,6 +45,7 @@ typedef struct minode {
   int refCount;
   int dirty;
   int mounted;
+  int mode;
   MTABLE *mptr;
 } MINODE;
 

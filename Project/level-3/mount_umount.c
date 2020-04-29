@@ -1,7 +1,21 @@
 
 int printMTables () {
     printf("mounted disks:\n");
-    printf("    dev    name\n")
+    printf("    dev     ninodes nblocks imap    bmap    inode_start   name\n");
+    MTABLE * p_mtable;
+    for (int i = 0; i < NMTABLE; i++) {
+        p_mtable = &mtable[i];
+        if (p_mtable->dev != 0) {
+            printf("    %6d  %6d  %6d  %6d  %6d  %6d      %s\n",
+                p_mtable->dev,
+                p_mtable->ninodes,
+                p_mtable->nblocks,
+                p_mtable->imap,
+                p_mtable->bmap,
+                p_mtable->inode_start,
+                p_mtable->name);
+        }
+    }
 }
 
 int mount (char * diskname, char * mountpoint) {
@@ -31,11 +45,11 @@ int mount (char * diskname, char * mountpoint) {
         printf("open %s failed\n", diskname);
         return -2;
     }
-    u8 * buffer[BLKSIZE];
-    SUPER * p_superblock = getblock(fileDesc, 1, buffer);
+    u8 buffer[BLKSIZE];
+    get_block(fileDesc, 1, buffer);
+    SUPER * p_superblock = (SUPER *) buffer;
     if (p_superblock->s_magic != 0xEF53) {
-        printf("magic = %x is not an ext2 filesystem\n", sp->s_magic);
-        umount(diskname);
+        printf("magic = %x is not an ext2 filesystem\n", p_superblock->s_magic);
         return -3;
     }
     int ino = getino(mountpoint);
@@ -53,7 +67,58 @@ int mount (char * diskname, char * mountpoint) {
         }
     }
     p_mtable->dev = fileDesc;
-    // todo: lots
+    strncpy(p_mtable->name, diskname, 64);
+    p_mtable->ninodes = p_superblock->s_inodes_count;
+    p_mtable->nblocks = p_superblock->s_blocks_count;
+    get_block(p_mtable->dev, 2, buffer);
+    GD * p_groupdesc = (GD *) buffer;
+    p_mtable->bmap = p_groupdesc->bg_block_bitmap;
+    p_mtable->imap = p_groupdesc->bg_inode_bitmap;
+    p_mtable->inode_start = p_groupdesc->bg_inode_table;
+    mip->mounted = 1;
+    mip->mptr = p_mtable;
+    p_mtable->mptr = mip;
+
+    return 1;
 }
 
-
+int umount(char * diskname) {
+    MTABLE * p_mtable;
+    int i;
+    for (i = 0; i < NMTABLE; i++) {
+        p_mtable = &mtable[i];
+        if (strcmp(p_mtable->name, diskname) == 0) {
+            printf("found disk: %s mounted in mtable[%d]\n", diskname, i);
+            break;
+        }
+    }
+    if (i == NMTABLE) {
+        printf("disk: %s not found in mount tables\n", diskname);
+        return -1;
+    }
+    for (i = 0; i < NPROC; i++) {
+        if (proc[i].cwd->dev == p_mtable->dev) {
+            printf("disk: %s is currently in use in proc %d\n", diskname, i);
+            return -2;
+        }
+    }
+    for (i = 0; i <NMINODE; i++) {
+        if (minode[i].dev == p_mtable->dev) {
+            printf("disk: %s is currently in use - opended as minode[%d]\n",
+                diskname, i);
+            return -3;
+        }
+    }
+    p_mtable->mptr->mounted = 0;
+    iput(p_mtable->mptr);
+    p_mtable->dev = 0;
+    p_mtable->name[0] = '\0';
+    p_mtable->ninodes = 0;
+    p_mtable->nblocks = 0;
+    p_mtable->bmap = 0;
+    p_mtable->imap = 0;
+    p_mtable->inode_start = 0;
+    p_mtable->mptr = NULL;
+    printf("Successfully unmounted %s\n", diskname);
+    return 1;
+}

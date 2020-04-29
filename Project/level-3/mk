@@ -1,5 +1,9 @@
-# ./mkdisk
-rm diskimage a.out
-cp diskimagebackup diskimage
+#! /bin/bash
+rm a.out disk1 disk2 disk3.1 disk3.2 mydisk
+cp samples/disk1 disk1
+cp samples/disk2 disk2
+cp samples/disk3.1 disk3.1
+cp samples/disk3.2 disk3.2
+cp samples/mydisk mydisk
 gcc main.c
-./a.out
+./a.out disk3.1

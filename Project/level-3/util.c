@@ -138,10 +138,11 @@ int search(MINODE *mip, char *name) {
 }
 
 int getino(char *pathname) {
-    int i, ino, blk, disp;
+    int i, j, ino, blk, disp;
     char buf[BLKSIZE];
     INODE *ip;
     MINODE *mip;
+    MTABLE * p_mtable;
 
     printf("getino: pathname=%s\n", pathname);
     if (strcmp(pathname, "/") == 0) return 2;
@@ -149,6 +150,7 @@ int getino(char *pathname) {
     // starting mip = root OR CWD
     if (pathname[0] == '/') {
         mip = root;
+        dev = root->dev;
     } else {
         mip = running->cwd;
     }
@@ -161,6 +163,29 @@ int getino(char *pathname) {
         printf("===========================================\n");
         printf("getino: i=%d name[%d]=%s\n", i, i, name[i]);
 
+        if ((strcmp(name[i], "..") == 0) &&
+            (mip->dev != root->dev) &&
+            (mip->ino == 2)
+        ) {
+            printf("UP cross mounting point\n");
+            for (j = 0; j < NMTABLE; j++) {
+                p_mtable = &mtable[j];
+                if (p_mtable->dev == mip->dev) {
+                    printf("dev %d mounted at mtable[%d]\n", mip->dev, j);
+                    break;
+                }
+            }
+            if (j == NMTABLE) {
+                printf("ERROR IN getino()!!! - mtable not found\n");
+                exit(2);
+            }
+            iput(mip);
+            dev = p_mtable->dev;
+            ino = search(p_mtable->mptr, "..");
+            mip = iget(dev, ino);
+            continue;
+        }
+
         ino = search(mip, name[i]);
 
         if (ino==0){
@@ -170,6 +195,14 @@ int getino(char *pathname) {
         }
         iput(mip);                // release current mip
         mip = iget(dev, ino);     // get next mip
+
+        if (mip->mounted == 1) {
+            printf("DOWN cross mounting point\n");
+            p_mtable = mip->mptr;
+            iput(mip);
+            dev = p_mtable->dev;
+            mip = iget(dev, 2);
+        }
     }
 
     iput(mip);                   // release mip  

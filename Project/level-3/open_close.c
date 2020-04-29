@@ -65,9 +65,9 @@ int open_file(char * filename, int mode) {
     
     // check if already open -- using mounted value in MINODE
     int multiread = 0;
-    if (mountedINode->mounted < 0) { // not in use
+    if (mountedINode->mode < 0) { // not in use
         printf("%s is not already open\n", filename);
-    } else if((mountedINode->mounted == READ_MODE) &&
+    } else if((mountedINode->mode == READ_MODE) &&
         (mode == READ_MODE)) { // open for reading only
         multiread = 1;
         printf("%s is already open for reading\n", filename);
@@ -136,7 +136,7 @@ int open_file(char * filename, int mode) {
     }
 
     // tell the MINODE how it was opened
-    mountedINode->mounted = mode;
+    mountedINode->mode = mode;
 
     // update the file's time fields
     mountedINode->INODE.i_atime = time(0L);
@@ -256,7 +256,7 @@ int close_file(int fileDescriptor) {
 
     if (refCount == 0) {
         printf("Closing Inode %d\n", closedMInode->ino);
-        closedMInode->mounted = -1;
+        closedMInode->mode = -1;
         iput(closedMInode);
     }
     return 1;

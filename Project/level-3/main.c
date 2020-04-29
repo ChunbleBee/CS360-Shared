@@ -25,6 +25,8 @@ char gpath[128]; // global for tokenized components
 char *name[32];  // assume at most 32 components in pathname
 int   n;         // number of component strings
 
+char spbuf[BLKSIZE], gpbuf[BLKSIZE];
+
 int fd, dev;
 int nblocks, ninodes, bmap, imap, inode_start; // disk parameters
 
@@ -48,7 +50,7 @@ int init()
     MINODE *mip;
     PROC   *p;
     OFT * p_oft;
-    MTABLE * p_mtable
+    MTABLE * p_mtable;
 
     printf("init()\n");
 
@@ -56,8 +58,9 @@ int init()
         mip = &minode[i];
         mip->dev = mip->ino = 0;
         mip->refCount = 0;
-        mip->mounted = -1;
-        mip->mptr = 0;
+        mip->mounted = 0;
+        mip->mode = -1;
+        mip->mptr = NULL;
     }
     for (i=0; i<NPROC; i++) {
         p = &proc[i];
@@ -80,6 +83,11 @@ int init()
         p_mtable->dev = 0;
         p_mtable->mptr = NULL;
         p_mtable->name[0] = '\0';
+        p_mtable->ninodes = 0;
+        p_mtable->nblocks = 0;
+        p_mtable->bmap = 0;
+        p_mtable->imap = 0;
+        p_mtable->inode_start = 0;
     }
 }
 
@@ -97,14 +105,15 @@ int quit() {
         while (mip->refCount > 0)
         iput(mip);
     }
+    put_block(dev, 1, spbuf);
+    put_block(dev, 2, gpbuf);
+    close(fd);
     exit(0);
 }
 
-char * defaultdisk = "mydisk";
-char * disk = defaultdisk;
+char * disk = "mydisk";
 int main(int argc, char *argv[ ]) {
     int ino;
-    char spbuf[BLKSIZE], gpbuf[BLKSIZE];
     char line[128], cmd[32], pathname[128], pathname2[128];
     char * writebuffer;
 
@@ -232,7 +241,7 @@ int main(int argc, char *argv[ ]) {
         } else if (strcmp(cmd, "cp") == 0) {
             tryCopy(pathname, pathname2);
         } else if (strcmp(cmd, "mount") == 0) {
-            if (pathname[0] == "\0") {
+            if (pathname[0] == '\0') {
                 printMTables();
             } else if (pathname2[0] == 0) {
                 printf("must provide mount point for mounting:\n");
@@ -255,5 +264,4 @@ int main(int argc, char *argv[ ]) {
             }
         } else printf("no command, cmd: %s", cmd);
     }
-    close(fd);
 }
