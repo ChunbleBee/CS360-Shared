@@ -1,0 +1,5 @@
+# ./mkdisk
+rm diskimage a.out
+cp diskimagebackup diskimage
+gcc main.c
+./a.out

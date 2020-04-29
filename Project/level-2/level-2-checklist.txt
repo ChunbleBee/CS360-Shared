@@ -1,0 +1,33 @@
+Makiah Heinzmann 11442136
+Taiya Williams 11644614
+
+                 CS360 Project Level-2 Check List
+
+1. Download ~samples/LEVEL2/mydisk. Use it as diskimage for testing
+                              |-file1 : an empty file
+			      |-tiny  : a few lines of text, only 1 data block
+			      |-small : with 2 direct data blocks
+			      |-large : with Indirect data blocks
+			      |-huge  : with Double-Indirect data blocks
+
+
+A. IF YOU can do 2,3,4 below, you are done, skip Part B below
+
+2. Test YOUR cat:
+    cat tiny, cat small, cat large, cat huge: SEE OUTPUTS? _______yes______ 40
+
+3. Test YOUR cp:  '
+    cp small newsmall; ls: newsmall exist? SAME SIZE? __________yes________ 10
+    cp large newlarge; ls: newlarge exist? SAME SIZE? __________yes________ 20
+    cp huge newhuge;   ls: newhuge  exist? SAME SIZE? __________yes________ 30
+
+4. Enter quit to exit YOUR program. Check YOUR cp results under Linux:
+		 
+	 sudo mount mydisk /mnt           
+	 sudo ls -l /mnt                   # should see all files
+	 sudo diff /mnt/huge /mnt/newhuge  # diff will show differences, if ANY
+	 sudo umount /mnt
+
+    # diff prints nothing. files are the same.
+
+    # outputs of cat and copy can be seen in output.txt in WilliamsHeinzmann.zip
