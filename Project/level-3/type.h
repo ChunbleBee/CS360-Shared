@@ -21,13 +21,22 @@ DIR   *dp;
 #define NFD        16
 #define NPROC       2
 #define NOFT (NFD * NPROC)
+#define NMTABLE 16
 
 #define READ_MODE 0
 #define WRITE_MODE 1
 #define READ_WRITE_MODE 2
 #define APPEND_MODE 3
 
-
+typedef struct mtable {
+  int dev;
+  MINODE * mptr;
+  char name[64];
+  int ninodes;
+  int nblocks;
+  int imap;
+  int bmap;
+} MTABLE;
 
 typedef struct minode {
   INODE INODE;
@@ -35,7 +44,7 @@ typedef struct minode {
   int refCount;
   int dirty;
   int mounted;
-  struct mntable *mptr;
+  MTABLE *mptr;
 } MINODE;
 
 typedef struct oft {

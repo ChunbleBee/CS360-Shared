@@ -19,6 +19,8 @@ PROC   proc[NPROC], *running;
 
 OFT oft[NOFT];
 
+MTABLE mtable[NMTABLE];
+
 char gpath[128]; // global for tokenized components
 char *name[32];  // assume at most 32 components in pathname
 int   n;         // number of component strings
@@ -38,6 +40,7 @@ char linkedNameBuffer[60]; // global buffer for readlink
 #include "open_close.c"
 #include "read_cat.c"
 #include "write_cp.c"
+#include "mount_umount.c"
 
 int init()
 {
@@ -45,6 +48,7 @@ int init()
     MINODE *mip;
     PROC   *p;
     OFT * p_oft;
+    MTABLE * p_mtable
 
     printf("init()\n");
 
@@ -71,6 +75,12 @@ int init()
         p_oft->offset = 0;
         p_oft->refCount = 0;
     }
+    for (i=0; i<NMTABLE; i++) {
+        p_mtable = &mtable[i];
+        p_mtable->dev = 0;
+        p_mtable->mptr = NULL;
+        p_mtable->name[0] = '\0';
+    }
 }
 
 // load root INODE and set root pointer to it
@@ -90,12 +100,17 @@ int quit() {
     exit(0);
 }
 
-char *disk = "diskimage";
+char * defaultdisk = "mydisk";
+char * disk = defaultdisk;
 int main(int argc, char *argv[ ]) {
     int ino;
     char spbuf[BLKSIZE], gpbuf[BLKSIZE];
     char line[128], cmd[32], pathname[128], pathname2[128];
     char * writebuffer;
+
+    if (argc > 1) {
+        disk = argv[1];
+    }
   
     printf("checking EXT2 FS ....");
     if ((fd = open(disk, O_RDWR)) < 0) {
@@ -141,7 +156,7 @@ int main(int argc, char *argv[ ]) {
         printf("input command : [ ls | cd | pwd | mkdir | creat | rmdir\n");
         printf(
             "                | link | unlink | symlink | readlink | quit |\n");
-        printf("                | cat | write | append | cp ] $> ");
+        printf("                | cat | write | append | cp | mount | umount ] $> ");
         fgets(line, 128, stdin);
         line[strlen(line)-1] = '\0';
 
@@ -216,6 +231,29 @@ int main(int argc, char *argv[ ]) {
             close_file(fileDesc);
         } else if (strcmp(cmd, "cp") == 0) {
             tryCopy(pathname, pathname2);
+        } else if (strcmp(cmd, "mount") == 0) {
+            if (pathname[0] == "\0") {
+                printMTables();
+            } else if (pathname2[0] == 0) {
+                printf("must provide mount point for mounting:\n");
+                printf("    mount <diskname> <mountpoint>\n");
+            } else {
+                int err = mount(pathname, pathname2);
+                if (err < 0) {
+                    printf("mount failed\n");
+                }
+            }
+        } else if (strcmp(cmd, "umount") == 0) {
+            if (pathname[0] == '\0') {
+                printf("mous provide diskimage to un-mount:\n");
+                printf("    umount <diskname>\n");
+            } else {
+                int err = umount(pathname);
+                if (err < 0) {
+                    printf("umount failed\n");
+                }
+            }
         } else printf("no command, cmd: %s", cmd);
     }
+    close(fd);
 }
