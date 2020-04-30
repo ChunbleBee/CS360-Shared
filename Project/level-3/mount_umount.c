@@ -28,6 +28,7 @@ int mount (char * diskname, char * mountpoint) {
             return -1;
         }
     }
+    printf("disk: %s is not currently mounted\n", diskname);
     for (i = 0; i < NMTABLE; i++) {
         p_mtable = &mtable[i];
         if (p_mtable->dev == 0) {
@@ -38,12 +39,16 @@ int mount (char * diskname, char * mountpoint) {
     if (i == NMTABLE) {
         printf("all mtables are in use\n");
         return -2;
+    } else {
+        printf("allocated mtable[%d] for mounting", i);
     }
     printf("checking EXT2 FS ....");
     int fileDesc = open(diskname, O_RDWR);
     if (fileDesc < 0) {
         printf("open %s failed\n", diskname);
         return -2;
+    } else {
+        printf("opened %s for read/write\n", diskname);
     }
     u8 buffer[BLKSIZE];
     get_block(fileDesc, 1, buffer);
@@ -51,6 +56,8 @@ int mount (char * diskname, char * mountpoint) {
     if (p_superblock->s_magic != 0xEF53) {
         printf("magic = %x is not an ext2 filesystem\n", p_superblock->s_magic);
         return -3;
+    } else {
+        printf("%s is an ext2 file system\n", diskname);
     }
     int ino = getino(mountpoint);
     MINODE * mip = iget(dev, ino);
@@ -58,14 +65,17 @@ int mount (char * diskname, char * mountpoint) {
         printf("mountpoint: %s is not a directory\n", mountpoint);
         iput(mip);
         return -4;
+    } else {
+        printf("mountpoint: %s is a directory\n", mountpoint);
     }
     for (i = 0; i < NPROC; i++) {
-        if (proc[i].cwd->ino == mip->ino) {
+        if ((proc[i].cwd != NULL) && (proc[i].cwd->ino == mip->ino)) {
             printf("mountpoint: %s is currently in use\n", mountpoint);
             iput(mip);
             return -5;
         }
     }
+    printf("mountpoint is avalible for use - initializing\n");
     p_mtable->dev = fileDesc;
     strncpy(p_mtable->name, diskname, 64);
     p_mtable->ninodes = p_superblock->s_inodes_count;

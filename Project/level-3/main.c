@@ -105,8 +105,9 @@ int quit() {
         while (mip->refCount > 0)
         iput(mip);
     }
-    put_block(dev, 1, spbuf);
-    put_block(dev, 2, gpbuf);
+    // currently only writes back to root device
+    put_block(root->dev, 1, spbuf);
+    put_block(root->dev, 2, gpbuf);
     close(fd);
     exit(0);
 }

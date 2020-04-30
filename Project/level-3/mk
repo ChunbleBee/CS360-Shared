@@ -6,4 +6,4 @@ cp samples/disk3.1 disk3.1
 cp samples/disk3.2 disk3.2
 cp samples/mydisk mydisk
 gcc main.c
-./a.out disk3.1
+

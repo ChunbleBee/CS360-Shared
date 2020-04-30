@@ -1,0 +1,3 @@
+#! /bin/bash
+./mk
+./a.out disk3.1

@@ -15,6 +15,8 @@ int chdir(char *pathname) { // cd
         running->cwd = min;
     } else {
         printf("Failure: [ %s ] Not a directory!\n", pathname);
+        iput(min);
+        dev = running->cwd->dev;
     }
 }
 
@@ -51,7 +53,7 @@ int ls_dir(MINODE *mip) {
     for(int i = 0; i < 12; i++) {
         if (mip->INODE.i_block[i] == 0) break;
     
-        get_block(dev, mip->INODE.i_block[i], buf);
+        get_block(mip->dev, mip->INODE.i_block[i], buf);
         dp = (DIR *)buf;
         cp = buf;
 
@@ -60,7 +62,7 @@ int ls_dir(MINODE *mip) {
             temp[dp->name_len] = 0;
 
             // printf("[%d %s]  ", dp->inode, temp); // print [inode# name]
-            MINODE * inode = iget(dev, dp->inode);
+            MINODE * inode = iget(mip->dev, dp->inode);
             // printf("Record Length: %u\t", dp->rec_len);
             ls_file(inode, temp);
             iput(inode);
@@ -75,7 +77,8 @@ int ls(char *pathname) {
     printf("ls %s\n", pathname);
     //printf("ls CWD only! YOU do it for ANY pathname\n");
     if (pathname[0] != '\0') {
-        MINODE * min = iget(dev, getino(pathname));
+        int inode_number = getino(pathname);
+        MINODE * min = iget(dev, inode_number);
         if (S_ISDIR(min->INODE.i_mode)) {
             ls_dir(min);
         } else {
@@ -83,6 +86,7 @@ int ls(char *pathname) {
         }
         if (min != NULL) iput(min);
     } else {
+        dev = running->cwd->dev;
         ls_dir(running->cwd);
     }
 }
@@ -97,22 +101,43 @@ int ls(char *pathname) {
  *      // recursive call rpwd( pip) with parent minode
  */
 
-void recursivePWD(MINODE *curNode) {
-    if (curNode != root) {
-        int myINode = 0;
-        int parentINode = findino(curNode, &myINode);
-        MINODE * parent = iget(dev, parentINode);
-        char curName[256];
-        findmyname(parent, myINode, curName);
-        recursivePWD(parent);
-        iput(parent);
-        printf("/%s", curName);
+void recursivePWD(MINODE * cur_minode) {
+    if ((cur_minode->ino != root->ino) ||
+        (cur_minode->dev != root->dev)
+    ) {
+        int cur_inum = cur_minode->ino;
+        int parent_inum = getino("..");
+        MINODE * parent_minode = iget(dev, parent_inum);
+        char cur_name[256];
+        if (parent_minode->dev != cur_minode->dev) {
+            MTABLE * p_mtable;
+            int i;
+            for (i = 0; i < NMTABLE; i++) {
+                p_mtable = &mtable[i];
+                if (p_mtable->dev == cur_minode->dev) {
+                    break;
+                }
+            }
+            if (i == NMTABLE) {
+                printf("ERROR IN pwd(): broken mount table!\n");
+                exit(3);
+            }
+            findmyname(parent_minode, p_mtable->mptr->ino, cur_name);
+        } else {
+            findmyname(parent_minode, cur_inum, cur_name);
+        }
+        running->cwd = parent_minode;
+        recursivePWD(parent_minode);
+        iput(parent_minode);
+        printf("/%s", cur_name);
     }
 }
 
 void pwd(MINODE *wd) {
+    MINODE * cwd_ref = running->cwd;
     printf("CWD = ");
     if (wd == root) printf("/");
     recursivePWD(wd);
     printf("\n");
+    running->cwd = cwd_ref;
 }

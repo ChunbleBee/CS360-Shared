@@ -35,7 +35,7 @@ int tokenize(char *pathname)
 }
 
 // return minode pointer to loaded INODE
-MINODE * iget(int dev, int ino) {
+MINODE * iget(int device, int ino) {
     int i;
     MINODE *mip;
     char buf[BLKSIZE];
@@ -44,7 +44,7 @@ MINODE * iget(int dev, int ino) {
 
     for (i=0; i < NMINODE; i++){
         mip = &minode[i];
-        if (mip->dev == dev && mip->ino == ino){
+        if (mip->dev == device && mip->ino == ino){
             mip->refCount++;
             //printf("found [%d %d] as minode[%d] in core\n", dev, ino, i);
             return mip;
@@ -56,7 +56,7 @@ MINODE * iget(int dev, int ino) {
         if (mip->refCount == 0){
             //printf("allocating NEW minode[%d] for [%d %d]\n", i, dev, ino);
             mip->refCount = 1;
-            mip->dev = dev;
+            mip->dev = device;
             mip->ino = ino;
 
             // get INODE of ino into buf[ ]    
@@ -65,7 +65,7 @@ MINODE * iget(int dev, int ino) {
 
             //printf("iget: ino=%d blk=%d offset=%d\n", ino, blk, offset);
 
-            get_block(dev, blk, buf);
+            get_block(device, blk, buf);
             ip = (INODE *)buf + offset;
             // copy INODE to mp->INODE
             mip->INODE = *ip;
@@ -115,7 +115,7 @@ int search(MINODE *mip, char *name) {
 
     /*** search for name in mip's data blocks: ASSUME i_block[0] ONLY ***/
 
-    get_block(dev, ip->i_block[0], sbuf);
+    get_block(mip->dev, ip->i_block[0], sbuf);
     dp = (DIR *)sbuf;
     cp = sbuf;
     printf("  ino   rlen  nlen  name\n");
@@ -180,7 +180,7 @@ int getino(char *pathname) {
                 exit(2);
             }
             iput(mip);
-            dev = p_mtable->dev;
+            dev = p_mtable->mptr->dev;
             ino = search(p_mtable->mptr, "..");
             mip = iget(dev, ino);
             continue;
@@ -201,7 +201,8 @@ int getino(char *pathname) {
             p_mtable = mip->mptr;
             iput(mip);
             dev = p_mtable->dev;
-            mip = iget(dev, 2);
+            ino = 2;
+            mip = iget(dev, ino);
         }
     }
 
@@ -222,23 +223,8 @@ int findmyname(MINODE *parent, u32 myino, char *myname) {
     }
     strncpy(myname, dirPtr->name, dirPtr->name_len);
     myname[dirPtr->name_len] = '\0';
-    //printf("\n%s\n", myname); //TODO-rm
 }
 /***********************************************/
-
-int findino(MINODE *mip, u32 *myino) {
-    // myino = ino of . return ino of ..
-    char buf[BLKSIZE], *cp;   
-    DIR *dp;
-
-    get_block(mip->dev, mip->INODE.i_block[0], buf);
-    cp = buf; 
-    dp = (DIR *)buf;
-    *myino = dp->inode;
-    cp += dp->rec_len;
-    dp = (DIR *)cp;
-    return dp->inode;
-}
 
 /************** WE ADDED BITMAP FUNCTIONS ******************/
 
@@ -265,17 +251,17 @@ int clr_bit(u8 *buf, int bit) {
 
 /************** ALLOCATION FUNCTIONS **********************/
 // allocate an inode number from inode_bitmap
-int ialloc(int dev)  {
+int ialloc(int device)  {
     int  i;
     char buf[BLKSIZE];
 
     // read inode_bitmap block
-    get_block(dev, imap, buf);
+    get_block(device, imap, buf);
 
     for (i=0; i < ninodes; i++) {
         if (tst_bit(buf, i)==0) {
             set_bit(buf, i);
-            put_block(dev, imap, buf);
+            put_block(device, imap, buf);
             printf("allocated ino = %d\n", i+1); //bits count from 0; ino from 1
             sp->s_free_inodes_count--;
             gp->bg_free_inodes_count--;
@@ -285,20 +271,20 @@ int ialloc(int dev)  {
     return 0;
 }
 
-int balloc(int dev) {
+int balloc(int device) {
     u32 total_blocks = sp->s_blocks_count;
     u8 buf[BLKSIZE];
-    get_block(dev, bmap, buf);
+    get_block(device, bmap, buf);
     for (int i=0; i < total_blocks; i++) {
         if (tst_bit(buf, i) == 0) {
             set_bit(buf, i);
-            put_block(dev, bmap, buf);
+            put_block(device, bmap, buf);
             sp->s_free_blocks_count--;
             gp->bg_free_blocks_count--;
 
-            get_block(dev, i + 1, buf);
+            get_block(device, i + 1, buf);
             memset(buf, 0, BLKSIZE);
-            put_block(dev, i + 1, buf);
+            put_block(device, i + 1, buf);
             return i+1;
         }
     }
