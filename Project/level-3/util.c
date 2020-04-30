@@ -153,6 +153,7 @@ int getino(char *pathname) {
         dev = root->dev;
     } else {
         mip = running->cwd;
+        dev = running->cwd->dev;
     }
 
     mip->refCount++;         // because we iput(mip) later
