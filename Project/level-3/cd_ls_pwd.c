@@ -6,6 +6,7 @@ int chdir(char *pathname) { // cd
     printf("chdir %s\n", pathname);
     // printf("under construction READ textbook HOW TO chdir!!!!\n");
     // READ Chapter 11.7.3 HOW TO chdir
+
     int inode = getino(pathname);
 
     MINODE * min = iget(dev, inode);
@@ -85,6 +86,7 @@ int ls(char *pathname) {
             printf("Failure: [ %s ] Not a directory!\n", pathname);
         }
         if (min != NULL) iput(min);
+        dev = running->cwd->dev;
     } else {
         dev = running->cwd->dev;
         ls_dir(running->cwd);

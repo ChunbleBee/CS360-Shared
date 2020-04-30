@@ -255,17 +255,47 @@ int clr_bit(u8 *buf, int bit) {
 int ialloc(int device)  {
     int  i;
     char buf[BLKSIZE];
+    int dev_imap;
+    MTABLE * p_mtable;
+
+    if (device == root->dev) {
+        dev_imap = imap;
+    } else {
+        int i;
+        for (i = 0; i < NMTABLE; i++) {
+            p_mtable = &mtable[i];
+            if (p_mtable->dev == device) {
+                break;
+            }
+        }
+        if (i == NMTABLE) {
+            printf("divice %d not found in ialloc()\n", device);
+            return 0;
+        }
+        dev_imap = p_mtable->imap;
+    }
 
     // read inode_bitmap block
-    get_block(device, imap, buf);
+    get_block(device, dev_imap, buf);
 
     for (i=0; i < ninodes; i++) {
         if (tst_bit(buf, i)==0) {
             set_bit(buf, i);
-            put_block(device, imap, buf);
+            put_block(device, dev_imap, buf);
             printf("allocated ino = %d\n", i+1); //bits count from 0; ino from 1
-            sp->s_free_inodes_count--;
-            gp->bg_free_inodes_count--;
+            if (device == root->dev) {
+                sp->s_free_inodes_count--;
+                gp->bg_free_inodes_count--;
+            } else {
+                get_block(device, 1, buf);
+                SUPER * p_sup = (SUPER *) buf;
+                p_sup->s_free_inodes_count--;
+                put_block(device, 1, buf);
+                get_block(device, 2, buf);
+                GD * p_gd = (GD *) buf;
+                p_gd->bg_free_inodes_count--;
+                put_block(device, 2, buf);
+            }
             return i+1;
         }
     }
@@ -273,19 +303,51 @@ int ialloc(int device)  {
 }
 
 int balloc(int device) {
-    u32 total_blocks = sp->s_blocks_count;
-    u8 buf[BLKSIZE];
-    get_block(device, bmap, buf);
+    u32 total_blocks;
+    u8 buf[BLKSIZE], sup_buf[BLKSIZE];
+    SUPER * p_sup;
+    int dev_bmap;
+    MTABLE * p_mtable;
+
+    if (device == root->dev) {
+        total_blocks = sp->s_blocks_count;
+        dev_bmap = bmap;
+    } else {
+        int i;
+        for (i = 0; i < NMTABLE; i++) {
+            p_mtable = &mtable[i];
+            if (p_mtable->dev == device) {
+                break;
+            }
+        }
+        if (i == NMTABLE) {
+            printf("divice %d not found in balloc()\n", device);
+            return 0;
+        }
+        get_block(device, 1, sup_buf);
+        p_sup = (SUPER *) sup_buf;
+        total_blocks = p_sup->s_blocks_count;
+        dev_bmap = p_mtable->bmap;
+    }
+    get_block(device, dev_bmap, buf);
     for (int i=0; i < total_blocks; i++) {
         if (tst_bit(buf, i) == 0) {
             set_bit(buf, i);
-            put_block(device, bmap, buf);
-            sp->s_free_blocks_count--;
-            gp->bg_free_blocks_count--;
-
+            put_block(device, dev_bmap, buf);
             get_block(device, i + 1, buf);
             memset(buf, 0, BLKSIZE);
             put_block(device, i + 1, buf);
+            if (device == root->dev) {
+                sp->s_free_blocks_count--;
+                gp->bg_free_blocks_count--;
+            } else {
+                p_sup->s_free_blocks_count--;
+                put_block(device, 1, sup_buf);
+                get_block(device, 2, buf);
+                GD * p_gd = (GD *) buf;
+                p_gd->bg_free_blocks_count--;
+                put_block(device, 2, buf);
+            }
             return i+1;
         }
     }
@@ -295,44 +357,97 @@ int balloc(int device) {
 /********************* DEALLOCATION FUNCTIONS ****************************/
 int idalloc(int device, int inodeNum) {
     char buffer[BLKSIZE];
+    int dev_imap;
+    MTABLE * p_mtable;
+
+    if (device == root->dev) {
+        dev_imap = imap;
+
+        sp->s_free_inodes_count++;
+        gp->bg_free_inodes_count++;
+    } else {
+        int i;
+        for (i = 0; i < NMTABLE; i++) {
+            p_mtable = &mtable[i];
+            if (p_mtable->dev == device) {
+                break;
+            }
+        }
+        if (i == NMTABLE) {
+            printf("divice %d not found in idalloc()\n", device);
+            return 0;
+        }
+        dev_imap = p_mtable->imap;
+
+        get_block(device, 1, buffer);
+        SUPER * p_sup = (SUPER *) buffer;
+        p_sup->s_free_inodes_count++;
+        put_block(device, 1, buffer);
+        get_block(device, 2, buffer);
+        GD * p_gd = (GD *) buffer;
+        p_gd->bg_free_inodes_count++;
+        put_block(device, 2, buffer);
+    }
 
     if (inodeNum > ninodes) {
         printf("Error: inode number #%d out of range\n", inodeNum);
         return 0;
     }
 
-    get_block(device, imap, buffer);
+    get_block(device, dev_imap, buffer);
     clr_bit(buffer, inodeNum - 1);
-    put_block(device, imap, buffer);
-
-    sp->s_free_inodes_count++;
-    gp->bg_free_inodes_count++;
+    put_block(device, dev_imap, buffer);
 
     return 1;
 }
 
 int bdalloc(int device, int block) {
-    u32 total_blocks = sp->s_blocks_count;
-    char buffer[BLKSIZE];
-    get_block(device, bmap, buffer);
+    u32 total_blocks;
+    char buffer[BLKSIZE], sup_buf[BLKSIZE];
+    SUPER * p_sup;
+    int dev_bmap;
+    MTABLE * p_mtable;
 
-    // if (block > total_blocks || tst_bit(buffer, block) == 0) {
-    //    if (block > total_blocks)
-    //       printf("-- e1 -- block out of range.\n");
-    //    if (tst_bit(buffer, block) == 0)
-    //       printf("-- e2 -- block isn't allocated.\n");
-    //    printf("Error: failure in bdalloc(). block number #%d\n", block);
-    //    return 0;
-    // }
+    if (device == root->dev) {
+        total_blocks = sp->s_blocks_count;
+        dev_bmap = bmap;
+    } else {
+        int i;
+        for (i = 0; i < NMTABLE; i++) {
+            p_mtable = &mtable[i];
+            if (p_mtable->dev == device) {
+                break;
+            }
+        }
+        if (i == NMTABLE) {
+            printf("divice %d not found in bdalloc()\n", device);
+            return 0;
+        }
+        get_block(device, 1, sup_buf);
+        p_sup = (SUPER *) sup_buf;
+        total_blocks = p_sup->s_blocks_count;
+        dev_bmap = p_mtable->bmap;
+    }
+    get_block(device, dev_bmap, buffer);
     if (block > total_blocks || tst_bit(buffer, block - 1) == 0) {
         printf("Error: block number #%d out of range\n", block);
         return 0;
     }
     clr_bit(buffer, block - 1);
-    put_block(device, bmap, buffer);
+    put_block(device, dev_bmap, buffer);
 
-    sp->s_free_blocks_count++;
-    gp->bg_free_blocks_count++;
+    if (device == root->dev) {
+        sp->s_free_blocks_count++;
+        gp->bg_free_blocks_count++;
+    } else {
+        p_sup->s_free_blocks_count++;
+        put_block(device, 1, sup_buf);
+        get_block(device, 2, buffer);
+        GD * p_gd = (GD *) buffer;
+        p_gd->bg_free_blocks_count++;
+        put_block(device, 2, buffer);
+
+    }
 
     return 1;
 }
