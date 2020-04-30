@@ -67,9 +67,8 @@ int init()
     for (i=0; i<NPROC; i++) {
         p = &proc[i];
         p->pid = i;
-        p->uid = i;
         p->uid = p->gid = 0;
-        p->cwd = 0;
+        p->cwd = NULL;
         p->status = FREE;
         for (j=0; j<NFD; j++)
             p->fd[j] = NULL;
@@ -99,6 +98,7 @@ int create_process(u32 usertype) {
         for (int i = 0; i < NPROC; i++) {
             if (proc[i].status == FREE) {
                 proc[i].status = READY;
+                proc[i].uid = i;
                 proc[i].gid = usertype;
                 proc[i].cwd = root;
                 return proc[i].pid;
@@ -112,9 +112,9 @@ int create_process(u32 usertype) {
 }
 
 int switch_process(u32 pid) {
-    if (pid < NPROC && proc[pid].status == READY) {
+    if (pid >= 0 && pid < NPROC && proc[pid].status == READY) {
         running = &proc[pid];
-        printf("Successfully switched to process %u\n", pid);
+        printf("Successfully switched to process %u\n", running->pid);
         return 1;
     }
     printf("Invalid process ID\n");
@@ -152,9 +152,11 @@ int mount_root() {
 }
 
 int quit() {
+    if (running->pid != 0)
+        switch_process(0);
     int i;
     MINODE *mip;
-    for (i=0; i<NMINODE; i++) {
+    for (i = 0; i < NMINODE; i++) {
         mip = &minode[i];
         while (mip->refCount > 0) {
             iput(mip);
@@ -221,7 +223,7 @@ int main(int argc, char *argv[ ]) {
     running->cwd = iget(dev, 2);
     printf("root refCount = %d\n", root->refCount);
 
-    printf("Attempting to creae user-level process...\n");
+    printf("Attempting to create user-group process...\n");
     int upid = create_process(USER_GROUP);
     if (upid != -1) {
         printf("Created user-level process #P%d\n", upid);
@@ -230,10 +232,10 @@ int main(int argc, char *argv[ ]) {
     }
 
     while(1) {
-        printf("input command : [ ls | cd | pwd | mkdir | creat | rmdir\n");
-        printf("                | link | unlink | symlink | readlink | quit |\n");
-        printf("                | cat | write | append | cp | mount | umount |\n");
-        printf("                | new | switch | kill ] $> ");
+        printf("[ ls | cd | pwd | mkdir | creat | rmdir\n");
+        printf("| link | unlink | symlink | readlink | quit |\n");
+        printf("| cat | write | append | cp | mount | umount |\n");
+        printf("| new | switch | kill ] $> ");
         fgets(line, 128, stdin);
         line[strlen(line)-1] = '\0';
 

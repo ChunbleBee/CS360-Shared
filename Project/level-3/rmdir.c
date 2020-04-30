@@ -30,8 +30,13 @@ int tryRemoveDirectory(char * path) { // rmdir
             
             if (childMInode != NULL) {
                 if (S_ISDIR(childMInode->INODE.i_mode)) {
-                    if ((running->pid == 0) ||
-                        (0)
+
+                    if ((running->uid == 0) ||
+                        ((parentMInode->INODE.i_mode & 0200) &&
+                            (running->uid == parentMInode->INODE.i_uid)) ||
+                        ((parentMInode->INODE.i_mode & 0020) &&
+                            (running->gid == parentMInode->INODE.i_gid)) ||
+                        (parentMInode->INODE.i_mode & 0002)
                     ) {
                         outcome = removeDirectory(parentMInode,
                             childMInode, childName);
@@ -47,11 +52,11 @@ int tryRemoveDirectory(char * path) { // rmdir
         } else {
             printf("child doesn't exist\n");
         }
-
-        iput(parentMInode);
     } else {
         printf("parent not directory\n");
     }
+
+    iput(parentMInode);
 
 
     if (outcome == -1) {
@@ -107,8 +112,10 @@ int removeDirectory(MINODE * parentMInode,
         freeInodeAndBlocks(childMInode);
         outcome = (removeChild(parentMInode, childName) == -1) ? outcome : 0;
         parentMInode->dirty = 1;
+    } else {
+        printf("--> Failure: The directory can't be deleted while it has items in it, or is linked to by other files.\n");
     }
-    printf("freeing inode\n");
+    printf("Exiting rmdir, and freeing used minodes.\n");
     return outcome;
 }
 
@@ -158,17 +165,6 @@ int removeChild(MINODE * parentMInode, char * childName) {
 
                     while(curBytePtr + removedRecordLength <= buffer+BLKSIZE) {
                         u16 recordLength = curDirEnt->rec_len;
-                        // printf("byte location: %d, record length: %u\n",
-                        //     prevBytePtr + removedRecordLength, recordLength);
-                        // printf("prevDirEnt info: %.*s, inode: %u, reclen: %u,
-                        //     byteptr: %d\n", prevDirEnt->name_len,
-                        //     prevDirEnt->name, prevDirEnt->inode,
-                        //     prevDirEnt->rec_len, prevBytePtr);
-                        // printf("curDirEnt info: %.*s, inode: %u, reclen: %u,
-                        //     byteptr: %d\n", curDirEnt->name_len,
-                        //     curDirEnt->name, curDirEnt->inode,
-                        //     curDirEnt->rec_len, curBytePtr);
-                        // getchar();
                         memcpy(prevBytePtr, curBytePtr, recordLength);
                         curBytePtr += recordLength;
                         curDirEnt = (DIR *) curBytePtr;

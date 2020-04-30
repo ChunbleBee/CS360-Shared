@@ -23,7 +23,7 @@ int symlink(char * oldPath, char * newPath) {
             strcpy(newPathCopy, newPath);
             int created = tryCreate(newPathCopy);
             if (created >= 0) {
-                printf("created new file: %s", newPath);
+                printf("created new file: %s\n", newPath);
                 if (newPath[0] == '/') {
                     dev = root->dev;
                 } else {

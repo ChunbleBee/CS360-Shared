@@ -26,16 +26,16 @@ int ls_file(MINODE *mip, char *name)
   // printf("ls_file: to be done: READ textbook for HOW TO!!!!\n");
   // READ Chapter 11.7.3 HOW TO ls
   char type, perm[10] = "wrxwrxwrx";
-  __u16 mode = mip->INODE.i_mode;
+  u16 mode = mip->INODE.i_mode;
   if (S_ISDIR(mode)) type = 'd';
   else if (S_ISLNK(mode)) type = 'l';
   else type = '-';
   for (int i = 0; i < 9; i++) if (!(mode & (1 << i))) perm[8 - i] = '-';
-  __u16 links = mip->INODE.i_links_count;
-  __u16 owner = mip->INODE.i_uid;
-  __u16 group = mip->INODE.i_gid;
+  u16 links = mip->INODE.i_links_count;
+  u16 owner = mip->INODE.i_uid;
+  u16 group = mip->INODE.i_gid;
   time_t date = mip->INODE.i_mtime;
-  __u32 size = mip->INODE.i_size;
+  u32 size = mip->INODE.i_size;
   printf("%c%s% 4d% 4d% 4d  %.20s % 8d    %s",
     type, perm, links, owner, group, ctime(&date)+4, size, name);
   if (S_ISLNK(mode)) {

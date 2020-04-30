@@ -82,21 +82,17 @@ void iput(MINODE *mip) {
     char buffer[BLKSIZE];
     INODE *ip;
 
+    if (mip == NULL) {
+        printf("Failure: can't iput() an minode that doesn't exist\n");
+        return;
+    }
+
     mip->refCount--;
 
     if (mip->refCount > 0)  // minode is still in use
         return;
     if (!mip->dirty)        // INODE has not changed; no need to write back
         return;
-
-    /* write INODE back to disk */
-    /***** NOTE *******************************************
-    For mountroot, we never MODIFY any loaded INODE
-                    so no need to write it back
-    FOR LATER WROK: MUST write INODE back to disk if refCount==0 && DIRTY
-
-    Write YOUR code here to write INODE back to disk
-    ********************************************************/
     block  = (mip->ino - 1) / 8 + inode_start;
     offset = (mip->ino - 1) % 8;
     get_block(mip->dev, block, buffer);
@@ -224,6 +220,22 @@ int findmyname(MINODE *parent, u32 myino, char *myname) {
     }
     strncpy(myname, dirPtr->name, dirPtr->name_len);
     myname[dirPtr->name_len] = '\0';
+}
+
+int findParentInodeNum(MINODE *mip) {
+    //return ino of ..
+    char buf[BLKSIZE], *cp;   
+    DIR *dp;
+
+    get_block(mip->dev, mip->INODE.i_block[0], buf);
+    // getting .
+    cp = buf; 
+    dp = (DIR *)buf;
+    // getting ..
+    cp += dp->rec_len;
+    dp = (DIR *)cp;
+    // returning the inode num
+    return dp->inode;
 }
 /***********************************************/
 
@@ -455,7 +467,7 @@ int bdalloc(int device, int block) {
 int freeInodeAndBlocks(MINODE * mounted) {
     printf("freeing inode and data blocks of %d\n", mounted->ino);
     truncate(mounted);
-    printf("freeing inode: %d", mounted->ino);
+    printf("\tfreeing inode: %d\n", mounted->ino);
     idalloc(mounted->dev, mounted->ino);
 }
 

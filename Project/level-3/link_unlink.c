@@ -37,18 +37,32 @@ int tryLink(char * oldPath, char * newPath) { // link
                     MINODE * newParentMInode = iget(dev, newParentInodeNum);
 
                     if (S_ISDIR(newParentMInode->INODE.i_mode)) {
-                        if (search(newParentMInode, newChildName) == 0) {
-                            enter_name(newParentMInode, oldChildInodeNum,
-                                newChildName);
-                            oldChildMInode->INODE.i_links_count++;
-                            oldChildMInode->dirty = 1;
-                            iput(newParentMInode);
-                            iput(oldChildMInode);
-                            iput(oldParentMInode);
-                            return 1;
+                        if ((running->uid == 0) ||
+                            ((newParentMInode->INODE.i_mode & 0200) &&
+                                (running->uid == newParentMInode->INODE.i_uid)) ||
+                            ((newParentMInode->INODE.i_mode & 0020) &&
+                                (running->gid == newParentMInode->INODE.i_gid)) ||
+                            (newParentMInode->INODE.i_mode & 0002)
+                        ) {
+                            if (search(newParentMInode, newChildName) == 0) {
+                                enter_name(newParentMInode, oldChildInodeNum,
+                                    newChildName);
+                                oldChildMInode->INODE.i_links_count++;
+                                oldChildMInode->dirty = 1;
+                                iput(newParentMInode);
+                                iput(oldChildMInode);
+                                iput(oldParentMInode);
+                                return 1;
+                            } else {
+                                printf("%s already exists in %s\n", newChildName,
+                                    newParentPath);
+                                iput(newParentMInode);
+                                iput(oldChildMInode);
+                                iput(oldParentMInode);
+                                return -7;
+                            }
                         } else {
-                            printf("%s already exists in %s\n", newChildName,
-                                newParentPath);
+                            printf("Failure: You do not have permissions to write to this folder.\n");
                             iput(newParentMInode);
                             iput(oldChildMInode);
                             iput(oldParentMInode);
@@ -97,17 +111,24 @@ int tryUnlink(char *path) {
         printf("%s does not exist\n", path);
         return -1;
     }
+    char pathCopy[128];
+    strcpy(pathCopy, path);
+    char * childName = basename(path);
+    char * parentPath = dirname(pathCopy);
+    int parentInodeNum = getino(parentPath);
+
     MINODE * childMInode = iget(dev, childInodeNum);
+    MINODE * parentMInode = iget(dev, parentInodeNum);
+
     if (S_ISREG(childMInode->INODE.i_mode) ||
         S_ISLNK(childMInode->INODE.i_mode)) {
-        if (running->gid <= childMInode->INODE.i_gid) {
-            char pathCopy[128];
-            strcpy(pathCopy, path);
-            char * childName = basename(path);
-            char * parentPath = dirname(pathCopy);
-            int parentInodeNum = getino(parentPath);
-
-            MINODE * parentMInode = iget(dev, parentInodeNum);
+        if ((running->uid == 0) ||
+            ((parentMInode->INODE.i_mode & 0200) &&
+                (running->uid == parentMInode->INODE.i_uid)) ||
+            ((parentMInode->INODE.i_mode & 0020) &&
+                (running->gid == parentMInode->INODE.i_gid)) ||
+            (parentMInode->INODE.i_mode & 0002)
+        ) {
             printf("I made it this far\n");
             removeChild(parentMInode, childName);
             printf("after removeChild\n");
@@ -119,14 +140,18 @@ int tryUnlink(char *path) {
                 freeInodeAndBlocks(childMInode);
             }
             iput(childMInode);
+            iput(parentMInode);
             return 1;
         } else {
             printf("You don't fudgin' have permissions. Get fudgin' permissions, you fudgin' fudger.\n");
+            iput(childMInode);
+            iput(parentMInode);
             return -3;
         }
     } else {
         printf("%s is not a regular file or a symbolic link\n", path);
         iput(childMInode);
+        iput(parentMInode);
         return -2;
     }
 }
