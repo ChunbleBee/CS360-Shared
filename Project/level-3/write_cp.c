@@ -26,7 +26,9 @@ int writeToFile(OFT * file, u8 * writeBuffer, u32 bytesProvided) {
         int startingByte = file->offset % BLKSIZE;
         int remainingBytesInBlock = BLKSIZE - startingByte;
         int physicalBlock;
+
         printf("- - - - - - - - - - - - - - - - - - - -\n");
+
         if (logicalBlock < 12) {
             if (fileMInode->INODE.i_block[logicalBlock] == 0) {
                 fileMInode->INODE.i_block[logicalBlock] =

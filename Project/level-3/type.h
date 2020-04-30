@@ -13,20 +13,29 @@ GD    *gp;
 INODE *ip;
 DIR   *dp;   
 
-#define FREE        0
-#define READY       1
+#define FREE  0
+#define READY 1
 
-#define BLKSIZE  1024
-#define NMINODE   128
-#define NFD        16
-#define NPROC       2
-#define NOFT (NFD * NPROC)
-#define NMTABLE 16
+#define BLKSIZE           1024
+#define NMINODE            128
+#define NFD                 16
+#define NPROC               20
+#define NOFT     (NFD * NPROC)
+#define NMTABLE             16
 
-#define READ_MODE 0
-#define WRITE_MODE 1
+#define READ_MODE       0
+#define WRITE_MODE      1
 #define READ_WRITE_MODE 2
-#define APPEND_MODE 3
+#define APPEND_MODE     3
+
+#define ROOT_PROCESS    0
+#define SERVICE_PROCESS 1
+#define USER_PROCESS    2
+#define ERROR_PROCESS   3
+
+#define ROOT_GROUP    0
+#define SERVICE_GROUP 1
+#define USER_GROUP    2
 
 typedef struct mtable {
   int dev;

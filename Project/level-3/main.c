@@ -91,6 +91,52 @@ int init()
     }
 }
 
+int create_process(u32 usertype) {
+    if (usertype >= running->uid) {
+        for (int i = 0; i < NPROC; i++) {
+            if (proc[i].status == FREE) {
+                proc[i].status = READY;
+                proc[i].uid = usertype;
+                proc[i].gid = usertype;
+                proc[i].cwd = root;
+                return proc[i].pid;
+            }
+        }
+        printf("The kernel panics... for all processes are in use.\n");
+    } else {
+        printf("Cannot create a new process with a higher user-permissions level than current.\n");
+    }
+    return -1;
+}
+
+int switch_process(u32 pid) {
+    if (pid < NPROC && proc[pid].status == READY) {
+        running = &proc[pid];
+        printf("Successfully switched to process %u\n", pid);
+    }
+    printf("Invalid process ID\n");
+    return 0;
+}
+
+int kill_process(u32 pid) {
+    if (pid < NPROC && proc[pid].status == READY) {
+        if (proc[pid].uid <= running->pid) {
+            for(int i = 0; i < NFD; i++) {
+                if (proc[pid].fd[i] != NULL) {
+                    close_file(i);
+                }
+                proc[pid].status = FREE;
+            }
+            proc[pid]
+        } else {
+            printf("Incorrect permissions to kill this process!\n");
+            return -1;
+        }
+    }
+    printf("Invalid Process id.\n");
+    return -1;
+}
+
 // load root INODE and set root pointer to it
 int mount_root() {  
     printf("mount_root()\n");
@@ -154,19 +200,25 @@ int main(int argc, char *argv[ ]) {
     mount_root();
     printf("root refCount = %d\n", root->refCount);
 
-    printf("creating P0 as running process\n");
+    printf("creating P0 as root, running process\n");
     running = &proc[0];
     running->status = READY;
     running->cwd = iget(dev, 2);
     printf("root refCount = %d\n", root->refCount);
 
-    // WRTIE code here to create P1 as a USER process
-    
+    printf("Attempting to creae user-level process...\n");
+    int upid = create_process(USER_PROCESS);
+    if (upid != -1) {
+        printf("Created user-level process #P%d\n", upid);
+    } else {
+        printf("Failed to create new user-level process.\n");
+    }
+
     while(1) {
         printf("input command : [ ls | cd | pwd | mkdir | creat | rmdir\n");
-        printf(
-            "                | link | unlink | symlink | readlink | quit |\n");
-        printf("                | cat | write | append | cp | mount | umount ] $> ");
+        printf("                | link | unlink | symlink | readlink | quit |\n");
+        printf("                | cat | write | append | cp | mount | umount |\n"
+        printf("                | new | switch | kill ] $> ");
         fgets(line, 128, stdin);
         line[strlen(line)-1] = '\0';
 
@@ -262,6 +314,36 @@ int main(int argc, char *argv[ ]) {
                 if (err < 0) {
                     printf("umount failed\n");
                 }
+            }
+        } else if (strcmp(cmd, "new") == 0) {
+            u32 usertype = ERROR_PROCESS;
+
+            if (strcmp(pathname, "user") == 0 || strcmp(pathname, "") == 0) {
+                usertype = USER_PROCESS;
+            } else if (strcmp(pathname, "service") == 0) {
+                usertype = SERVICE_PROCESS;
+            } else if (strcmp(pathname, "root") == 0) {
+                usertype = ROOT_PROCESS;
+            }
+            if (usertype != ERROR_PROCESS) {
+                int new = create_process(usertype);
+                if (new != -1) {
+                    printf("Created new process #p%d\n", new);
+                } else {
+                    printf("Failed to create a new process!\n");
+                }
+            } else {
+                printf("Cannot create process of user type: [ %s ]!\n", pathname);
+            }
+        } else if (strcmp(cmd, "switch") == 0) {
+            if (strlen(pathname) > 0) {
+                u32 pid = atoi(&pathname[1]);
+                switch_process(pid);
+            } 
+        } else if (strcmp(cmd, "kill") == 0) {
+            if (strlen(pathname) > 0) {
+                u32 pid = atoi(&pathname[1]);
+                kill_process(pid);
             }
         } else printf("no command, cmd: %s", cmd);
     }
