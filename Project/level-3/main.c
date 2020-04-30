@@ -113,6 +113,7 @@ int switch_process(u32 pid) {
     if (pid < NPROC && proc[pid].status == READY) {
         running = &proc[pid];
         printf("Successfully switched to process %u\n", pid);
+        return 1;
     }
     printf("Invalid process ID\n");
     return 0;
@@ -125,9 +126,9 @@ int kill_process(u32 pid) {
                 if (proc[pid].fd[i] != NULL) {
                     close_file(i);
                 }
-                proc[pid].status = FREE;
+                proc[pid].fd[i] = NULL;
             }
-            proc[pid]
+            proc[pid].status = FREE;
         } else {
             printf("Incorrect permissions to kill this process!\n");
             return -1;
@@ -225,7 +226,7 @@ int main(int argc, char *argv[ ]) {
     while(1) {
         printf("input command : [ ls | cd | pwd | mkdir | creat | rmdir\n");
         printf("                | link | unlink | symlink | readlink | quit |\n");
-        printf("                | cat | write | append | cp | mount | umount |\n"
+        printf("                | cat | write | append | cp | mount | umount |\n");
         printf("                | new | switch | kill ] $> ");
         fgets(line, 128, stdin);
         line[strlen(line)-1] = '\0';
