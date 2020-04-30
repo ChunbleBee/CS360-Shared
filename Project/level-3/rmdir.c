@@ -30,9 +30,8 @@ int tryRemoveDirectory(char * path) { // rmdir
             
             if (childMInode != NULL) {
                 if (S_ISDIR(childMInode->INODE.i_mode)) {
-                    if (running->uid == 0 ||
-                        (running->uid == childMInode->INODE.i_uid &&
-                        running->uid == parentMInode->INODE.i_uid)
+                    if ((running->pid == 0) ||
+                        (0)
                     ) {
                         outcome = removeDirectory(parentMInode,
                             childMInode, childName);

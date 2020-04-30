@@ -31,6 +31,8 @@ int fd, dev;
 int nblocks, ninodes, bmap, imap, inode_start; // disk parameters
 
 char linkedNameBuffer[60]; // global buffer for readlink
+
+char * disk = "mydisk";
 //////////////////////////////////
 
 #include "util.c"
@@ -65,6 +67,7 @@ int init()
     for (i=0; i<NPROC; i++) {
         p = &proc[i];
         p->pid = i;
+        p->uid = i;
         p->uid = p->gid = 0;
         p->cwd = 0;
         p->status = FREE;
@@ -92,11 +95,10 @@ int init()
 }
 
 int create_process(u32 usertype) {
-    if (usertype >= running->uid) {
+    if (usertype >= running->gid) {
         for (int i = 0; i < NPROC; i++) {
             if (proc[i].status == FREE) {
                 proc[i].status = READY;
-                proc[i].uid = usertype;
                 proc[i].gid = usertype;
                 proc[i].cwd = root;
                 return proc[i].pid;
@@ -120,8 +122,9 @@ int switch_process(u32 pid) {
 }
 
 int kill_process(u32 pid) {
-    if (pid < NPROC && proc[pid].status == READY) {
-        if (proc[pid].uid <= running->pid) {
+    if (pid > 0 && pid < NPROC && proc[pid].status == READY) {
+        if (proc[pid].gid < running->gid || proc[pid].uid == running->uid) {
+            int isCurrent = (proc[pid].uid == running->uid) ? 1 : 0;
             for(int i = 0; i < NFD; i++) {
                 if (proc[pid].fd[i] != NULL) {
                     close_file(i);
@@ -129,6 +132,10 @@ int kill_process(u32 pid) {
                 proc[pid].fd[i] = NULL;
             }
             proc[pid].status = FREE;
+
+            if (isCurrent) {
+                running = &proc[0];
+            }
         } else {
             printf("Incorrect permissions to kill this process!\n");
             return -1;
@@ -167,7 +174,6 @@ int quit() {
     exit(0);
 }
 
-char * disk = "mydisk";
 int main(int argc, char *argv[ ]) {
     int ino;
     char line[128], cmd[32], pathname[128], pathname2[128];
@@ -182,7 +188,7 @@ int main(int argc, char *argv[ ]) {
         printf("open %s failed\n", disk);
         exit(1);
     }
-    dev = fd;    // fd is the global dev 
+    dev = fd;    // fd is the global dev
 
     /********** read super block  ****************/
     get_block(dev, 1, spbuf);
@@ -216,7 +222,7 @@ int main(int argc, char *argv[ ]) {
     printf("root refCount = %d\n", root->refCount);
 
     printf("Attempting to creae user-level process...\n");
-    int upid = create_process(USER_PROCESS);
+    int upid = create_process(USER_GROUP);
     if (upid != -1) {
         printf("Created user-level process #P%d\n", upid);
     } else {
@@ -325,16 +331,17 @@ int main(int argc, char *argv[ ]) {
                 }
             }
         } else if (strcmp(cmd, "new") == 0) {
-            u32 usertype = ERROR_PROCESS;
+            u32 usertype = ERROR_GROUP;
 
             if (strcmp(pathname, "user") == 0 || strcmp(pathname, "") == 0) {
-                usertype = USER_PROCESS;
-            } else if (strcmp(pathname, "service") == 0) {
-                usertype = SERVICE_PROCESS;
+                usertype = USER_GROUP;
+            } else if (strcmp(pathname, "other") == 0) {
+                usertype = OTHER_GROUP;
             } else if (strcmp(pathname, "root") == 0) {
-                usertype = ROOT_PROCESS;
+                usertype = ROOT_GROUP;
             }
-            if (usertype != ERROR_PROCESS) {
+
+            if (usertype != ERROR_GROUP) {
                 int new = create_process(usertype);
                 if (new != -1) {
                     printf("Created new process #p%d\n", new);

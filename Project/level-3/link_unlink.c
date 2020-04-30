@@ -100,25 +100,30 @@ int tryUnlink(char *path) {
     MINODE * childMInode = iget(dev, childInodeNum);
     if (S_ISREG(childMInode->INODE.i_mode) ||
         S_ISLNK(childMInode->INODE.i_mode)) {
-        char pathCopy[128];
-        strcpy(pathCopy, path);
-        char * childName = basename(path);
-        char * parentPath = dirname(pathCopy);
-        int parentInodeNum = getino(parentPath);
+        if (running->gid <= childMInode->INODE.i_gid) {
+            char pathCopy[128];
+            strcpy(pathCopy, path);
+            char * childName = basename(path);
+            char * parentPath = dirname(pathCopy);
+            int parentInodeNum = getino(parentPath);
 
-        MINODE * parentMInode = iget(dev, parentInodeNum);
-        printf("I made it this far\n");
-        removeChild(parentMInode, childName);
-        printf("after removeChild\n");
-        parentMInode->dirty = 1;
-        iput(parentMInode);
-        childMInode->INODE.i_links_count--;
-        childMInode->dirty = 1;
-        if (childMInode->INODE.i_links_count <= 0) {
-            freeInodeAndBlocks(childMInode);
+            MINODE * parentMInode = iget(dev, parentInodeNum);
+            printf("I made it this far\n");
+            removeChild(parentMInode, childName);
+            printf("after removeChild\n");
+            parentMInode->dirty = 1;
+            iput(parentMInode);
+            childMInode->INODE.i_links_count--;
+            childMInode->dirty = 1;
+            if (childMInode->INODE.i_links_count <= 0) {
+                freeInodeAndBlocks(childMInode);
+            }
+            iput(childMInode);
+            return 1;
+        } else {
+            printf("You don't fudgin' have permissions. Get fudgin' permissions, you fudgin' fudger.\n");
+            return -3;
         }
-        iput(childMInode);
-        return 1;
     } else {
         printf("%s is not a regular file or a symbolic link\n", path);
         iput(childMInode);

@@ -28,14 +28,10 @@ DIR   *dp;
 #define READ_WRITE_MODE 2
 #define APPEND_MODE     3
 
-#define ROOT_PROCESS    0
-#define SERVICE_PROCESS 1
-#define USER_PROCESS    2
-#define ERROR_PROCESS   3
-
 #define ROOT_GROUP    0
-#define SERVICE_GROUP 1
-#define USER_GROUP    2
+#define USER_GROUP    1
+#define OTHER_GROUP   2
+#define ERROR_GROUP   3
 
 typedef struct mtable {
   int dev;
