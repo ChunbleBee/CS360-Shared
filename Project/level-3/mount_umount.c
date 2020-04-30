@@ -107,13 +107,18 @@ int umount(char * diskname) {
         return -1;
     }
     for (i = 0; i < NPROC; i++) {
-        if (proc[i].cwd->dev == p_mtable->dev) {
+        if (proc[i].cwd != NULL &&
+            proc[i].cwd->dev == p_mtable->dev
+        ) {
             printf("disk: %s is currently in use in proc %d\n", diskname, i);
             return -2;
         }
     }
-    for (i = 0; i <NMINODE; i++) {
-        if (minode[i].dev == p_mtable->dev) {
+    for (i = 0; i < NMINODE; i++) {
+        if ((minode[i].dev == p_mtable->dev) &&
+            (p_mtable->mptr->ino != minode[i].ino ||
+                p_mtable->mptr->refCount > 1)
+        ) {
             printf("disk: %s is currently in use - opended as minode[%d]\n",
                 diskname, i);
             return -3;
@@ -121,6 +126,7 @@ int umount(char * diskname) {
     }
     p_mtable->mptr->mounted = 0;
     iput(p_mtable->mptr);
+    close(p_mtable->dev);
     p_mtable->dev = 0;
     p_mtable->name[0] = '\0';
     p_mtable->ninodes = 0;

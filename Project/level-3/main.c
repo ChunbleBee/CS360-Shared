@@ -102,8 +102,16 @@ int quit() {
     MINODE *mip;
     for (i=0; i<NMINODE; i++) {
         mip = &minode[i];
-        while (mip->refCount > 0)
-        iput(mip);
+        while (mip->refCount > 0) {
+            iput(mip);
+        }
+    }
+    MTABLE *mtp;
+    for (i=0; i<NMTABLE; i++) {
+        mtp = &mtable[i];
+        if (mtp->dev > 0) {
+            close(mtp->dev);
+        }
     }
     // currently only writes back to root device
     put_block(root->dev, 1, spbuf);
